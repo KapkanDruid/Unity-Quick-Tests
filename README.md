@@ -53,5 +53,6 @@ public static class EditorSmokeTests
 - hotkey в edit mode пока срабатывает из Scene View, потому что редакторские события клавиатуры приходят через GUI event loop;
 - schedule работает через `EditorApplication.update`, поэтому кадры означают editor update ticks.
 
-Архитектурные решения и план расширения instance methods описаны в
+Дальнейшие фичи и порядок разработки описаны в
+[`Docs/ROADMAP.md`](Docs/ROADMAP.md). Архитектурные решения и риски собраны в
 [`Docs/DESIGN.md`](Docs/DESIGN.md).

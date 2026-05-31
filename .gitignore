@@ -27,3 +27,8 @@ graphify-out.meta
 .agent-memory/
 .agent-memory.meta
 .graphify_*
+
+# Local agent instructions. Keep repository-specific guidance on the developer
+# machine instead of publishing it as part of the Unity package.
+AGENTS.md
+AGENTS.md.meta
