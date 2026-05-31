@@ -24,9 +24,11 @@ Thumbs.db
 # memory on the developer machine; only human-facing docs are versioned.
 graphify-out/
 graphify-out.meta
-.agent-memory/
-.agent-memory.meta
+AgentMemory/
+AgentMemory.meta
 .graphify_*
+.graphifyignore
+.obsidian/
 
 # Local agent instructions. Keep repository-specific guidance on the developer
 # machine instead of publishing it as part of the Unity package.
