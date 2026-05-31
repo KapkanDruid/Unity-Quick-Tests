@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace QuickEditorTests.Editor
+namespace UnityQuickTests.Editor
 {
     internal sealed class QuickTestHotkeyBinding
     {
@@ -48,7 +48,7 @@ namespace QuickEditorTests.Editor
 
             if (keys.Length == 0)
             {
-                Debug.LogWarning($"[QuickEditorTests] {method.DisplayName} hotkey is ignored: no keys were provided.");
+                Debug.LogWarning($"[UnityQuickTests] {method.DisplayName} hotkey is ignored: no keys were provided.");
                 return false;
             }
 
@@ -69,7 +69,7 @@ namespace QuickEditorTests.Editor
             if (triggerKeys.Count != 1)
             {
                 Debug.LogWarning(
-                    $"[QuickEditorTests] {method.DisplayName} hotkey is ignored: use modifiers plus one trigger key."
+                    $"[UnityQuickTests] {method.DisplayName} hotkey is ignored: use modifiers plus one trigger key."
                 );
 
                 return false;

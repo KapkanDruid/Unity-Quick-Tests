@@ -1,6 +1,30 @@
-# Quick Editor Tests: решения, риски и план прототипа
+# Unity Quick Tests: решения, риски и план прототипа
 
 Дата: 2026-05-30
+
+## Состояние версии 0.1.0
+
+Пакет вынесен в отдельный UPM repository и переименован в **Unity Quick Tests**.
+
+Публичные идентификаторы:
+
+```text
+package id: com.gggameworks.unity-quick-tests
+runtime assembly: UnityQuickTests.Runtime
+editor assembly: UnityQuickTests.Editor
+namespace: UnityQuickTests
+```
+
+В `0.1.0` реально поддерживаются только `static void` методы без параметров.
+
+Play Mode hotkey уже проверен вручную. Рабочий путь использует скрытый editor-only
+`QuickTestInputPoller : MonoBehaviour`, который получает настоящий player-loop
+`Update`. Polling только через `EditorApplication.update` оказался ненадёжным для
+коротких состояний клавиатуры.
+
+Edit Mode hotkey остаётся ограниченным fallback через `SceneView.duringSceneGui`.
+Поддержка instance methods, weak registry и IL PostProcessor остаются планом
+следующих итераций в порядке, описанном ниже.
 
 ## Цель
 
@@ -57,7 +81,7 @@ private void RunEverySeconds()
 Текущий путь в проекте:
 
 ```text
-Assets/_Game/ExternalModules/QuickEditorTests/
+Assets/_Game/ExternalModules/UnityQuickTests/
   Runtime/
   Editor/
 ```
@@ -65,7 +89,7 @@ Assets/_Game/ExternalModules/QuickEditorTests/
 Потенциальный будущий package layout:
 
 ```text
-QuickEditorTests/
+UnityQuickTests/
   Runtime/
   Editor/
   Codegen.Editor/
@@ -208,8 +232,8 @@ private static void RunStaticTest()
 Решение:
 
 - фильтровать в `WillProcess(ICompiledAssembly compiledAssembly)`;
-- обрабатывать только assemblies, которые ссылаются на `QuickEditorTests.Runtime`;
-- исключать `QuickEditorTests.*`, Unity assemblies, vendor/package assemblies при необходимости;
+- обрабатывать только assemblies, которые ссылаются на `UnityQuickTests.Runtime`;
+- исключать `UnityQuickTests.*`, Unity assemblies, vendor/package assemblies при необходимости;
 - после загрузки через Cecil дополнительно проверять наличие quick-test атрибутов.
 
 Пример правила:
@@ -217,14 +241,14 @@ private static void RunStaticTest()
 ```csharp
 public override bool WillProcess(ICompiledAssembly compiledAssembly)
 {
-    if (compiledAssembly.Name.StartsWith("QuickEditorTests"))
+    if (compiledAssembly.Name.StartsWith("UnityQuickTests"))
         return false;
 
     if (compiledAssembly.Name.StartsWith("Unity."))
         return false;
 
     return compiledAssembly.References.Any(reference =>
-        Path.GetFileNameWithoutExtension(reference) == "QuickEditorTests.Runtime");
+        Path.GetFileNameWithoutExtension(reference) == "UnityQuickTests.Runtime");
 }
 ```
 
@@ -238,7 +262,7 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 Решения:
 
 - оставить `autoReferenced: true` для удобства, но делать глубокую проверку атрибутов;
-- или сделать `autoReferenced: false`, чтобы пользователь явно подключал `QuickEditorTests.Runtime` только в нужные asmdef.
+- или сделать `autoReferenced: false`, чтобы пользователь явно подключал `UnityQuickTests.Runtime` только в нужные asmdef.
 
 Рекомендация для внешнего package:
 
@@ -424,9 +448,9 @@ Expected:
 
 After prototype validation:
 
-1. Add `QuickEditorTests.Codegen.Editor` assembly.
+1. Add `UnityQuickTests.Codegen.Editor` assembly.
 2. Implement IL PostProcessor.
-3. In `WillProcess`, filter by assembly references to `QuickEditorTests.Runtime`.
+3. In `WillProcess`, filter by assembly references to `UnityQuickTests.Runtime`.
 4. Load candidate assembly with Cecil only after fast filtering.
 5. Find types containing instance quick-test methods.
 6. Skip unsupported types:

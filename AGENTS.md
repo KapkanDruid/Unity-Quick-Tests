@@ -2,7 +2,20 @@
 
 ## Project Overview
 
-This repository is a Unity UPM package for Quick Editor Tests.
+This repository is a Unity UPM package for Unity Quick Tests.
+
+## Knowledge Loading
+
+Before broad scans, use this order when the local files exist:
+
+1. Read `.agent-memory/README.md`.
+2. Query `graphify-out/graph.json` with Graphify for the relevant area.
+3. Read only the relevant curated-memory page.
+4. Read `README.md` or `Docs/DESIGN.md` when human-facing context is needed.
+5. Open the required source files.
+
+`graphify-out/` and `.agent-memory/` are local-only and gitignored. Generated graph
+artifacts must not be edited manually.
 
 ## Rules
 

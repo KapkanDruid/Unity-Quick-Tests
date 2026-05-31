@@ -19,3 +19,11 @@
 *.VC.db
 .DS_Store
 Thumbs.db
+
+# Local project knowledge system. Keep generated structure and curated agent
+# memory on the developer machine; only human-facing docs are versioned.
+graphify-out/
+graphify-out.meta
+.agent-memory/
+.agent-memory.meta
+.graphify_*

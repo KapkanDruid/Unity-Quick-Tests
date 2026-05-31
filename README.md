@@ -1,16 +1,26 @@
 ---
-title: Quick Editor Tests
+title: Unity Quick Tests
 system: Tools
 tags: [editor, tests, tooling]
 ---
 
-# Quick Editor Tests
+# Unity Quick Tests
 
 Модуль добавляет быстрые editor-only вызовы статических методов через атрибуты.
-Папка `QuickEditorTests` не зависит от игрового кода и рассчитана на перенос в отдельный Unity package.
+Папка `UnityQuickTests` не зависит от игрового кода и рассчитана на перенос в отдельный Unity package.
+
+## Установка
+
+Добавьте Git dependency в `Packages/manifest.json` Unity-проекта:
+
+```json
+"com.gggameworks.unity-quick-tests": "https://github.com/KapkanDruid/UnityQuickTests.git#v0.1.0"
+```
+
+## Использование
 
 ```csharp
-using QuickEditorTests;
+using UnityQuickTests;
 using UnityEngine;
 
 public static class EditorSmokeTests
@@ -42,3 +52,6 @@ public static class EditorSmokeTests
 - hotkey в Play Mode проверяется через скрытый editor-only `MonoBehaviour`, который работает в обычном player-loop `Update`;
 - hotkey в edit mode пока срабатывает из Scene View, потому что редакторские события клавиатуры приходят через GUI event loop;
 - schedule работает через `EditorApplication.update`, поэтому кадры означают editor update ticks.
+
+Архитектурные решения и план расширения instance methods описаны в
+[`Docs/DESIGN.md`](Docs/DESIGN.md).

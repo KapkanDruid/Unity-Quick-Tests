@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace QuickEditorTests.Editor
+namespace UnityQuickTests.Editor
 {
     internal sealed class QuickTestMethod
     {

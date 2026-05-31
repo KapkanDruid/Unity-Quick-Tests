@@ -1,6 +1,6 @@
 using System;
 
-namespace QuickEditorTests
+namespace UnityQuickTests
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
     public sealed class QuickTestScheduleAttribute : Attribute

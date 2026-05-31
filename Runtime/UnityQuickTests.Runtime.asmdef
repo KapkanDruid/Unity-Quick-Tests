@@ -1,12 +1,8 @@
 {
-    "name": "QuickEditorTests.Editor",
-    "rootNamespace": "QuickEditorTests.Editor",
-    "references": [
-        "QuickEditorTests.Runtime"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "name": "UnityQuickTests.Runtime",
+    "rootNamespace": "UnityQuickTests",
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

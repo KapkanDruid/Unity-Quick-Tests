@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace QuickEditorTests
+namespace UnityQuickTests
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
     public sealed class QuickTestHotkeyAttribute : Attribute

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace QuickEditorTests.Editor
+namespace UnityQuickTests.Editor
 {
     internal static class QuickTestDiscovery
     {
@@ -66,25 +66,25 @@ namespace QuickEditorTests.Editor
 
             if (!method.IsStatic)
             {
-                Debug.LogWarning($"[QuickEditorTests] {displayName} is ignored: only static methods are supported.");
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: only static methods are supported.");
                 return false;
             }
 
             if (method.ContainsGenericParameters)
             {
-                Debug.LogWarning($"[QuickEditorTests] {displayName} is ignored: generic methods are not supported.");
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: generic methods are not supported.");
                 return false;
             }
 
             if (method.GetParameters().Length > 0)
             {
-                Debug.LogWarning($"[QuickEditorTests] {displayName} is ignored: methods must be parameterless.");
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: methods must be parameterless.");
                 return false;
             }
 
             if (method.ReturnType != typeof(void))
             {
-                Debug.LogWarning($"[QuickEditorTests] {displayName} is ignored: only void methods are supported.");
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: only void methods are supported.");
                 return false;
             }
 

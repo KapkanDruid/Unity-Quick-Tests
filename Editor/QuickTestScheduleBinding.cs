@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace QuickEditorTests.Editor
+namespace UnityQuickTests.Editor
 {
     internal sealed class QuickTestScheduleBinding
     {
@@ -54,7 +54,7 @@ namespace QuickEditorTests.Editor
                     return currentTime >= _nextTime;
 
                 default:
-                    Debug.LogWarning($"[QuickEditorTests] Unsupported schedule unit: {_attribute.Unit}.");
+                    Debug.LogWarning($"[UnityQuickTests] Unsupported schedule unit: {_attribute.Unit}.");
                     IsCompleted = true;
                     return false;
             }

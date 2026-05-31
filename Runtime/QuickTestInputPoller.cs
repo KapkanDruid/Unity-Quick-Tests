@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace QuickEditorTests
+namespace UnityQuickTests
 {
     public sealed class QuickTestInputPoller : MonoBehaviour
     {

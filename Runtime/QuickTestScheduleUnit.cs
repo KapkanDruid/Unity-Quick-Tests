@@ -1,4 +1,4 @@
-namespace QuickEditorTests
+namespace UnityQuickTests
 {
     public enum QuickTestScheduleUnit
     {

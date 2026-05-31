@@ -4,12 +4,12 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace QuickEditorTests.Editor
+namespace UnityQuickTests.Editor
 {
     [InitializeOnLoad]
     public static class QuickEditorTestRunner
     {
-        private const string PollerObjectName = "[QuickEditorTestsInputPoller]";
+        private const string PollerObjectName = "[UnityQuickTestsInputPoller]";
 
         private static readonly List<QuickTestHotkeyBinding> _hotkeyBindings = new List<QuickTestHotkeyBinding>();
         private static readonly List<QuickTestScheduleBinding> _scheduleBindings = new List<QuickTestScheduleBinding>();
@@ -34,18 +34,18 @@ namespace QuickEditorTests.Editor
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        [MenuItem("Tools/Quick Editor Tests/Reload")]
+        [MenuItem("Tools/Unity Quick Tests/Reload")]
         public static void Reload()
         {
             ReloadInternal(true);
         }
 
-        [MenuItem("Tools/Quick Editor Tests/List Registered Tests")]
+        [MenuItem("Tools/Unity Quick Tests/List Registered Tests")]
         public static void ListRegisteredTests()
         {
             var lines = new List<string>
             {
-                "[QuickEditorTests] Registered tests:",
+                "[UnityQuickTests] Registered tests:",
                 $"Hotkeys: {_hotkeyBindings.Count}",
                 $"Schedules: {_scheduleBindings.Count}"
             };
@@ -73,7 +73,7 @@ namespace QuickEditorTests.Editor
             if (shouldLogSummary)
             {
                 Debug.Log(
-                    $"[QuickEditorTests] Registered {_hotkeyBindings.Count} hotkey(s) and " +
+                    $"[UnityQuickTests] Registered {_hotkeyBindings.Count} hotkey(s) and " +
                     $"{_scheduleBindings.Count} schedule(s)."
                 );
             }

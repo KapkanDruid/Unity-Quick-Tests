@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace QuickEditorTests.Editor
+namespace UnityQuickTests.Editor
 {
     internal readonly struct QuickTestRegistration
     {
