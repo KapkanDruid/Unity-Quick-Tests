@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("EditMode", "PlayMode", "All")]
+    [ValidateSet("EditMode", "PlayMode", "PlayerBuild", "All")]
     [string]$Mode = "All",
 
     [string]$UnityPath,
@@ -54,6 +54,8 @@ function Invoke-UnityTests {
         "-logFile", $logPath
     )
 
+    Remove-Item -LiteralPath $resultsPath -Force -ErrorAction SilentlyContinue
+
     if ($TestFilter) {
         $arguments += @("-testFilter", $TestFilter)
     }
@@ -106,9 +108,68 @@ function Invoke-UnityTests {
     }
 }
 
+function Invoke-UnityPlayerBuildSmoke {
+    $logPath = Join-Path $artifactsPath "PlayerBuildSmoke.log"
+    $buildPath = Join-Path $artifactsPath "PlayerBuildSmoke\UnityQuickTestsPlayerBuildSmoke.exe"
+    $arguments = @(
+        "-batchmode",
+        "-nographics",
+        "-projectPath", $projectPath,
+        "-buildTarget", "StandaloneWindows64",
+        "-executeMethod", "UnityQuickTests.Editor.Tests.QuickTestPlayerBuildSmoke.Run",
+        "-quit",
+        "-logFile", $logPath
+    )
+
+    Write-Host "Running Unity Quick Tests: PlayerBuild smoke"
+    $process = Start-Process `
+        -FilePath $UnityPath `
+        -ArgumentList $arguments `
+        -PassThru `
+        -WindowStyle Hidden
+
+    try {
+        Wait-Process -Id $process.Id -Timeout $TimeoutSeconds -ErrorAction Stop
+    }
+    catch {
+        if (-not $process.HasExited) {
+            Stop-Process -Id $process.Id -Force
+        }
+
+        throw "Unity player build smoke timed out after $TimeoutSeconds seconds. See $logPath."
+    }
+
+    $process.Refresh()
+
+    if ($process.ExitCode -ne 0) {
+        throw "Unity returned exit code $($process.ExitCode) during player build smoke. See $logPath."
+    }
+
+    if (-not (Test-Path -LiteralPath $buildPath)) {
+        throw "Unity did not create $buildPath. See $logPath."
+    }
+
+    $leakedEditorAssemblies = Get-ChildItem `
+        -Path (Join-Path $artifactsPath "PlayerBuildSmoke") `
+        -Recurse `
+        -Filter "UnityQuickTests.Editor*.dll" `
+        -ErrorAction SilentlyContinue
+
+    if ($leakedEditorAssemblies) {
+        $names = $leakedEditorAssemblies | ForEach-Object { $_.Name }
+        throw "Editor assembly leaked into player build: $($names -join ', '). See $logPath."
+    }
+
+    Write-Host "PlayerBuild smoke result: passed"
+}
+
 if ($Mode -eq "All") {
     Invoke-UnityTests -TestMode "EditMode"
     Invoke-UnityTests -TestMode "PlayMode"
+    Invoke-UnityPlayerBuildSmoke
+}
+elseif ($Mode -eq "PlayerBuild") {
+    Invoke-UnityPlayerBuildSmoke
 }
 else {
     Invoke-UnityTests -TestMode $Mode

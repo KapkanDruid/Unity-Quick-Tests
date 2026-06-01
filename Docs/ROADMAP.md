@@ -38,13 +38,13 @@
 Задачи:
 
 - [x] Проверить static hotkey в Play Mode.
-- [ ] Проверить static hotkey в Edit Mode через Scene View.
-- [ ] Проверить schedule по editor ticks в режиме `Once`.
-- [ ] Проверить schedule по секундам в режиме `Repeat`.
-- [ ] Проверить повторные входы и выходы из Play Mode.
-- [ ] Добавить Edit Mode tests для attribute validation и discovery static
+- [x] Проверить static hotkey в Edit Mode через Scene View.
+- [x] Проверить schedule по editor ticks в режиме `Once`.
+- [x] Проверить schedule по секундам в режиме `Repeat`.
+- [x] Проверить повторные входы и выходы из Play Mode.
+- [x] Добавить Edit Mode tests для attribute validation и discovery static
   методов.
-- [ ] Добавить smoke-проверку, что Editor assembly не попадает в player build.
+- [x] Добавить smoke-проверку, что Editor assembly не попадает в player build.
 
 Критерий готовности:
 

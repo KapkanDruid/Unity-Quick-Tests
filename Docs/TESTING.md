@@ -16,6 +16,7 @@
 ```powershell
 .\scripts~\run-tests.ps1 -Mode EditMode
 .\scripts~\run-tests.ps1 -Mode PlayMode
+.\scripts~\run-tests.ps1 -Mode PlayerBuild
 ```
 
 Результаты сохраняются в локальной gitignored-папке `TestProject~/artifacts/`:
@@ -23,10 +24,13 @@
 - `EditMode-results.xml` и `PlayMode-results.xml` содержат машинно-читаемый
   результат;
 - `EditMode.log` и `PlayMode.log` содержат полный Unity log.
+- `PlayerBuildSmoke.log` содержит лог минимальной player build проверки.
 
 Скрипт возвращает ошибку, если Unity завершился с ненулевым кодом, не создал XML
-или сообщил о проваленных тестах. По умолчанию каждый слой ограничен пятью
-минутами. Лимит можно изменить параметром `-TimeoutSeconds`.
+или сообщил о проваленных тестах. Для `PlayerBuild` он также проверяет, что
+сборка создана и в выходную папку не попал `UnityQuickTests.Editor*.dll`.
+По умолчанию каждый слой ограничен пятью минутами. Лимит можно изменить
+параметром `-TimeoutSeconds`.
 
 ## Тестовый host-проект
 
@@ -57,9 +61,12 @@ Tests/
 `Tests/Editor` проверяет:
 
 - валидацию schedule-атрибута;
+- валидацию hotkey-атрибута;
 - расписания `Once` и `Repeat`;
+- срабатывание static hotkey через Scene View event;
 - совпадение hotkey с editor-событием;
 - rising edge hotkey через детерминированный fake input;
+- сброс состояния hotkey между Play Mode sessions;
 - reflection-вызов и логирование исключений;
 - discovery поддерживаемых и неподдерживаемых static-методов.
 
@@ -88,11 +95,7 @@ smoke-тест в игровом проекте. Consumer-проект не за
 ## Что пока остаётся ручной проверкой
 
 - реальное нажатие hotkey в Play Mode;
-- реальное нажатие hotkey в Scene View в Edit Mode;
-- отсутствие editor-only кода в player build.
-
-Player-build smoke следует автоматизировать отдельным шагом перед расширением
-instance methods.
+- реальное нажатие hotkey в Scene View в Edit Mode.
 
 ## Если Play Mode был принудительно остановлен
 

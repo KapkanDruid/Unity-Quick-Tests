@@ -19,12 +19,29 @@ namespace UnityQuickTests.Editor.Tests
             Assert.That(attribute.RepeatMode, Is.EqualTo(QuickTestRepeatMode.Repeat));
         }
 
+        [Test]
+        public void Constructor_DefaultsToOnce()
+        {
+            var attribute = new QuickTestScheduleAttribute(1, QuickTestScheduleUnit.Frames);
+
+            Assert.That(attribute.RepeatMode, Is.EqualTo(QuickTestRepeatMode.Once));
+        }
+
         [TestCase(0)]
         [TestCase(-1)]
-        public void Constructor_RejectsNonPositiveInterval(int interval)
+        public void Constructor_RejectsNonPositiveIntInterval(int interval)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new QuickTestScheduleAttribute(interval, QuickTestScheduleUnit.Frames)
+            );
+        }
+
+        [TestCase(0d)]
+        [TestCase(-0.01d)]
+        public void Constructor_RejectsNonPositiveDoubleInterval(double interval)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new QuickTestScheduleAttribute(interval, QuickTestScheduleUnit.Seconds)
             );
         }
     }

@@ -56,6 +56,54 @@ namespace UnityQuickTests.Editor
             Debug.Log(string.Join("\n", lines));
         }
 
+        internal static int HotkeyBindingCountForTests => _hotkeyBindings.Count;
+        internal static int ScheduleBindingCountForTests => _scheduleBindings.Count;
+
+        internal static void SetRegistrationsForTests(
+            IEnumerable<QuickTestRegistration> registrations,
+            IQuickTestInputSource inputSource,
+            int currentFrame,
+            double currentTime)
+        {
+            _hotkeyBindings.Clear();
+            _scheduleBindings.Clear();
+            _inputPoller = null;
+            _editorFrame = currentFrame;
+
+            IQuickTestInputSource resolvedInputSource = inputSource ?? UnityQuickTestInputSource.Instance;
+
+            foreach (QuickTestRegistration registration in registrations)
+            {
+                RegisterHotkeys(registration, resolvedInputSource);
+                RegisterSchedules(registration, currentTime);
+            }
+        }
+
+        internal static void TickEditorUpdateForTests(double currentTime)
+        {
+            OnEditorUpdate(currentTime, false);
+        }
+
+        internal static void HandleRuntimeUpdateForTests(bool isPlaying)
+        {
+            HandlePlayModeHotkeys(isPlaying);
+        }
+
+        internal static void HandlePlayModeStateChangedForTests(PlayModeStateChange stateChange)
+        {
+            OnPlayModeStateChanged(stateChange);
+        }
+
+        internal static void HandleSceneGuiEventForTests(Event currentEvent)
+        {
+            HandleSceneGuiEvent(currentEvent);
+        }
+
+        internal static void ReloadForTests()
+        {
+            ReloadInternal(false);
+        }
+
         private static void ReloadInternal(bool shouldLogSummary)
         {
             _hotkeyBindings.Clear();
@@ -66,7 +114,7 @@ namespace UnityQuickTests.Editor
 
             foreach (QuickTestRegistration registration in registrations)
             {
-                RegisterHotkeys(registration);
+                RegisterHotkeys(registration, UnityQuickTestInputSource.Instance);
                 RegisterSchedules(registration, currentTime);
             }
 
@@ -79,11 +127,15 @@ namespace UnityQuickTests.Editor
             }
         }
 
-        private static void RegisterHotkeys(QuickTestRegistration registration)
+        private static void RegisterHotkeys(QuickTestRegistration registration, IQuickTestInputSource inputSource)
         {
             foreach (QuickTestHotkeyAttribute attribute in registration.HotkeyAttributes)
             {
-                if (QuickTestHotkeyBinding.TryCreate(registration.Method, attribute, out QuickTestHotkeyBinding binding))
+                if (QuickTestHotkeyBinding.TryCreate(
+                    registration.Method,
+                    attribute,
+                    inputSource,
+                    out QuickTestHotkeyBinding binding))
                 {
                     _hotkeyBindings.Add(binding);
                 }
@@ -105,13 +157,20 @@ namespace UnityQuickTests.Editor
 
         private static void OnEditorUpdate()
         {
+            OnEditorUpdate(EditorApplication.timeSinceStartup, true);
+        }
+
+        private static void OnEditorUpdate(double currentTime, bool shouldEnsurePlayModeInputPoller)
+        {
             _editorFrame++;
-            EnsurePlayModeInputPoller();
+
+            if (shouldEnsurePlayModeInputPoller)
+            {
+                EnsurePlayModeInputPoller();
+            }
 
             if (_scheduleBindings.Count == 0)
                 return;
-
-            double currentTime = EditorApplication.timeSinceStartup;
 
             for (int i = _scheduleBindings.Count - 1; i >= 0; i--)
             {
@@ -127,12 +186,12 @@ namespace UnityQuickTests.Editor
 
         private static void OnRuntimeUpdate()
         {
-            HandlePlayModeHotkeys();
+            HandlePlayModeHotkeys(EditorApplication.isPlaying);
         }
 
-        private static void HandlePlayModeHotkeys()
+        private static void HandlePlayModeHotkeys(bool isPlaying)
         {
-            if (!EditorApplication.isPlaying || _hotkeyBindings.Count == 0)
+            if (!isPlaying || _hotkeyBindings.Count == 0)
             {
                 ResetHotkeyInputState();
                 return;
@@ -183,10 +242,13 @@ namespace UnityQuickTests.Editor
 
         private static void OnSceneGui(SceneView sceneView)
         {
+            HandleSceneGuiEvent(Event.current);
+        }
+
+        private static void HandleSceneGuiEvent(Event currentEvent)
+        {
             if (_hotkeyBindings.Count == 0)
                 return;
-
-            Event currentEvent = Event.current;
 
             if (currentEvent == null || currentEvent.type != EventType.KeyDown)
                 return;

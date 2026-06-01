@@ -18,6 +18,18 @@ namespace UnityQuickTests.Editor.Tests
                 nameof(ValidFixtures.Hotkey),
                 "Schedule"
             }));
+
+            QuickTestRegistration hotkeyRegistration = registrations.Single(
+                registration => registration.Method.Method.Name == nameof(ValidFixtures.Hotkey)
+            );
+            QuickTestRegistration scheduleRegistration = registrations.Single(
+                registration => registration.Method.Method.Name == "Schedule"
+            );
+
+            Assert.That(hotkeyRegistration.HotkeyAttributes, Has.Count.EqualTo(1));
+            Assert.That(hotkeyRegistration.ScheduleAttributes, Is.Empty);
+            Assert.That(scheduleRegistration.HotkeyAttributes, Is.Empty);
+            Assert.That(scheduleRegistration.ScheduleAttributes, Has.Count.EqualTo(1));
         }
 
         [Test]
