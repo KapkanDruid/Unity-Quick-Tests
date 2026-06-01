@@ -55,4 +55,5 @@ public static class EditorSmokeTests
 
 Дальнейшие фичи и порядок разработки описаны в
 [`Docs/ROADMAP.md`](Docs/ROADMAP.md). Архитектурные решения и риски собраны в
-[`Docs/DESIGN.md`](Docs/DESIGN.md).
+[`Docs/DESIGN.md`](Docs/DESIGN.md). Инструкция по автоматическим тестам находится
+в [`Docs/TESTING.md`](Docs/TESTING.md).

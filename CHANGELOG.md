@@ -4,6 +4,8 @@
 
 - Changed the package license to MIT.
 - Added a Russian-language feature roadmap.
+- Added a committed test host, batchmode runner script, and baseline automated tests.
+- Added Russian-language testing documentation.
 
 ## 0.1.0
 

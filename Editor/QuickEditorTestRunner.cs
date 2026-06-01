@@ -157,7 +157,7 @@ namespace UnityQuickTests.Editor
 
         private static void EnsurePlayModeInputPoller()
         {
-            if (!EditorApplication.isPlaying)
+            if (Application.isBatchMode || !EditorApplication.isPlaying)
                 return;
 
             if (_inputPoller != null)

@@ -34,3 +34,8 @@ AgentMemory.meta
 # machine instead of publishing it as part of the Unity package.
 AGENTS.md
 AGENTS.md.meta
+
+# Local test-run output. The reproducible host project itself is committed.
+TestProject~/artifacts/
+TestProject~/ProjectSettings/*
+!TestProject~/ProjectSettings/ProjectVersion.txt

@@ -15,6 +15,7 @@ namespace UnityQuickTests.Editor
             EventModifiers.Command;
 
         private readonly QuickTestMethod _method;
+        private readonly IQuickTestInputSource _inputSource;
         private readonly EventModifiers _modifiers;
         private readonly KeyCode _triggerKey;
         private bool _wasInputPressed;
@@ -24,11 +25,13 @@ namespace UnityQuickTests.Editor
 
         private QuickTestHotkeyBinding(
             QuickTestMethod method,
+            IQuickTestInputSource inputSource,
             EventModifiers modifiers,
             KeyCode triggerKey,
             string description)
         {
             _method = method;
+            _inputSource = inputSource;
             _modifiers = modifiers;
             _triggerKey = triggerKey;
             Description = description;
@@ -37,6 +40,15 @@ namespace UnityQuickTests.Editor
         public static bool TryCreate(
             QuickTestMethod method,
             QuickTestHotkeyAttribute attribute,
+            out QuickTestHotkeyBinding binding)
+        {
+            return TryCreate(method, attribute, UnityQuickTestInputSource.Instance, out binding);
+        }
+
+        internal static bool TryCreate(
+            QuickTestMethod method,
+            QuickTestHotkeyAttribute attribute,
+            IQuickTestInputSource inputSource,
             out QuickTestHotkeyBinding binding)
         {
             binding = null;
@@ -76,7 +88,7 @@ namespace UnityQuickTests.Editor
             }
 
             string description = BuildDescription(modifiers, triggerKeys[0]);
-            binding = new QuickTestHotkeyBinding(method, modifiers, triggerKeys[0], description);
+            binding = new QuickTestHotkeyBinding(method, inputSource, modifiers, triggerKeys[0], description);
             return true;
         }
 
@@ -94,7 +106,7 @@ namespace UnityQuickTests.Editor
 
         public bool ConsumeCurrentInputPress()
         {
-            bool isInputPressed = IsInputKeyPressed(_triggerKey) && GetCurrentInputModifiers() == _modifiers;
+            bool isInputPressed = _inputSource.GetKey(_triggerKey) && GetCurrentInputModifiers() == _modifiers;
             bool wasPressedThisTick = isInputPressed && !_wasInputPressed;
 
             _wasInputPressed = isInputPressed;
@@ -112,36 +124,31 @@ namespace UnityQuickTests.Editor
             _method.Invoke();
         }
 
-        private static EventModifiers GetCurrentInputModifiers()
+        private EventModifiers GetCurrentInputModifiers()
         {
             EventModifiers modifiers = EventModifiers.None;
 
-            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+            if (_inputSource.GetKey(KeyCode.LeftControl) || _inputSource.GetKey(KeyCode.RightControl))
             {
                 modifiers |= EventModifiers.Control;
             }
 
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            if (_inputSource.GetKey(KeyCode.LeftShift) || _inputSource.GetKey(KeyCode.RightShift))
             {
                 modifiers |= EventModifiers.Shift;
             }
 
-            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+            if (_inputSource.GetKey(KeyCode.LeftAlt) || _inputSource.GetKey(KeyCode.RightAlt))
             {
                 modifiers |= EventModifiers.Alt;
             }
 
-            if (Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand))
+            if (_inputSource.GetKey(KeyCode.LeftCommand) || _inputSource.GetKey(KeyCode.RightCommand))
             {
                 modifiers |= EventModifiers.Command;
             }
 
             return modifiers;
-        }
-
-        private static bool IsInputKeyPressed(KeyCode key)
-        {
-            return Input.GetKey(key);
         }
 
         private static bool TryGetModifier(KeyCode key, out EventModifiers modifier)

@@ -12,19 +12,22 @@ namespace UnityQuickTests.Editor
 
         public static IReadOnlyList<QuickTestRegistration> FindRegistrations()
         {
+            IEnumerable<Type> types = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.IsDynamic)
+                .SelectMany(GetLoadableTypes);
+
+            return FindRegistrations(types);
+        }
+
+        internal static IReadOnlyList<QuickTestRegistration> FindRegistrations(IEnumerable<Type> types)
+        {
             var registrations = new List<QuickTestRegistration>();
 
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Type type in types)
             {
-                if (assembly.IsDynamic)
-                    continue;
-
-                foreach (Type type in GetLoadableTypes(assembly))
+                foreach (MethodInfo method in type.GetMethods(MethodFlags))
                 {
-                    foreach (MethodInfo method in type.GetMethods(MethodFlags))
-                    {
-                        AddRegistration(registrations, method);
-                    }
+                    AddRegistration(registrations, method);
                 }
             }
 
