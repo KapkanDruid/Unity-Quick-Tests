@@ -9,7 +9,7 @@
 Публичные идентификаторы:
 
 ```text
-package id: com.gggameworks.unity-quick-tests
+package id: com.urbandruids.unity-quick-tests
 runtime assembly: UnityQuickTests.Runtime
 editor assembly: UnityQuickTests.Editor
 namespace: UnityQuickTests

@@ -16,7 +16,7 @@ tags: [editor, tests, tooling]
 Добавьте Git dependency в `Packages/manifest.json` Unity-проекта:
 
 ```json
-"com.gggameworks.unity-quick-tests": "https://github.com/KapkanDruid/UnityQuickTests.git#v0.1.0"
+"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/UnityQuickTests.git#v0.1.0"
 ```
 
 ## Использование

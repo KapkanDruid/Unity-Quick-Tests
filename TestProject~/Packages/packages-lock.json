@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.gggameworks.unity-quick-tests": {
+    "com.urbandruids.unity-quick-tests": {
       "version": "file:../..",
       "depth": 0,
       "source": "local",

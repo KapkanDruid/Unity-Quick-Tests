@@ -38,7 +38,7 @@
 подключает текущий checkout пакета через локальную зависимость:
 
 ```json
-"com.gggameworks.unity-quick-tests": "file:../.."
+"com.urbandruids.unity-quick-tests": "file:../.."
 ```
 
 Это позволяет тестировать незакоммиченные изменения до публикации новой версии.

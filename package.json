@@ -1,11 +1,11 @@
 {
-  "name": "com.gggameworks.unity-quick-tests",
+  "name": "com.urbandruids.unity-quick-tests",
   "version": "0.1.0",
   "displayName": "Unity Quick Tests",
   "description": "Attribute-driven quick test triggers for Unity editor and play mode workflows.",
   "unity": "6000.0",
   "author": {
-    "name": "GG Gameworks"
+    "name": "UrbanDruids"
   },
   "license": "MIT",
   "keywords": [
