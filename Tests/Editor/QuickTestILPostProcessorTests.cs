@@ -56,6 +56,14 @@ namespace UnityQuickTests.Editor.Tests
             Assert.That(
                 QuickTestILPostProcessorFilter.ShouldProcessAssembly(
                     "Game.Feature",
+                    new[] { "C:/Temp/UnityQuickTests.Runtime.dll" },
+                    new[] { "UNITY_STANDALONE_WIN", "UNITY_INCLUDE_TESTS", "ENABLE_MONO" }),
+                Is.False
+            );
+
+            Assert.That(
+                QuickTestILPostProcessorFilter.ShouldProcessAssembly(
+                    "Game.Feature",
                     new[] { "C:/Temp/Other.dll" },
                     new[] { "UNITY_EDITOR" }),
                 Is.False

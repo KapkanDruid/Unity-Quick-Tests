@@ -21,10 +21,11 @@ namespace: UnityQuickTests
 регистрируются автоматически через editor-only IL PostProcessor, а ручной weak
 registry остаётся fallback.
 
-Play Mode hotkey уже проверен вручную. Рабочий путь использует скрытый editor-only
-`QuickTestInputPoller : MonoBehaviour`, который получает настоящий player-loop
-`Update`. Polling только через `EditorApplication.update` оказался ненадёжным для
-коротких состояний клавиатуры.
+Play Mode hotkey уже проверен вручную. Рабочий путь использует скрытый
+`QuickTestInputPoller : MonoBehaviour`, который компилируется только под
+`UNITY_EDITOR` и получает настоящий player-loop `Update` в Play Mode. Polling
+только через `EditorApplication.update` оказался ненадёжным для коротких
+состояний клавиатуры.
 
 Edit Mode hotkey остаётся ограниченным fallback через `SceneView.duringSceneGui`.
 Поддержка plain C# instance methods реализована через weak registry и
@@ -397,10 +398,15 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 Решение:
 
 - runner и ILPP держать в Editor assemblies;
-- runtime атрибуты могут остаться в player как безвредные metadata, либо выноситься define-ами позже;
+- hidden Play Mode poller держать под `#if UNITY_EDITOR`, даже если файл лежит в
+  Runtime assembly;
+- runtime атрибуты оставлять в player как безвредные metadata;
 - `QuickTestInstanceRegistry.Register/Unregister` доступны runtime-коду как
   conditional no-op в player build и не зависят от `UnityEditor`;
-- injected registration call должен быть editor-only.
+- injected registration call должен быть editor-only;
+- player build smoke проверяет отсутствие Editor/CodeGen/Cecil assemblies,
+  `QuickTestInputPoller` type и registry registration call sites в managed
+  player script assemblies.
 
 ## Что проверено прототипом перед ILPP
 
@@ -475,6 +481,7 @@ Expected:
 Expected:
 
 - no editor runner assembly in player;
+- no hidden Play Mode poller type in player;
 - no injected editor-only registry calls in player;
 - no compile errors in non-editor build target.
 
@@ -530,10 +537,10 @@ Reason:
 
 Next correction:
 
-- verify player build safety now that injected calls exist in editor
-  assemblies;
-- keep static direct, Unity object lookup, registry routing and manual fallback
-  unchanged.
+- improve editor UX and diagnostics around conflicting hotkeys, registered test
+  listings, target scope and missing-target warnings;
+- keep static direct, Unity object lookup, registry routing, ILPP registration
+  and manual fallback unchanged.
 
 ## Confidence assessment
 
@@ -545,7 +552,9 @@ High confidence:
 - Unity object lookup for instance methods is feasible;
 - weak registry solves plain C# instance lookup without project-specific service dependencies;
 - ILPP can be filtered by assembly references and attributes;
-- Unity 6000.2 recognizes the `Unity.*.CodeGen` packaging pattern.
+- Unity 6000.2 recognizes the `Unity.*.CodeGen` packaging pattern;
+- player build output excludes editor runner, hidden poller, CodeGen/Cecil
+  assemblies and registry registration call sites.
 
 Medium confidence:
 
@@ -556,6 +565,5 @@ Medium confidence:
 Needs prototype/testing:
 
 - behavior with serializers and nonstandard construction paths;
-- player-build exclusion of injected calls;
 - generic/inherited method policy;
 - hotkey reliability across Unity editor focus contexts.

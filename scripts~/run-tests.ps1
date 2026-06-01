@@ -177,15 +177,27 @@ function Invoke-UnityPlayerBuildSmoke {
         throw "Unity did not create $buildPath. See $logPath."
     }
 
-    $leakedEditorAssemblies = Get-ChildItem `
-        -Path (Join-Path $artifactsPath "PlayerBuildSmoke") `
-        -Recurse `
-        -Filter "UnityQuickTests.Editor*.dll" `
-        -ErrorAction SilentlyContinue
+    $buildOutputPath = Join-Path $artifactsPath "PlayerBuildSmoke"
+    $forbiddenPlayerAssemblyPatterns = @(
+        "UnityQuickTests.Editor*.dll",
+        "Unity.UrbanDruids.UnityQuickTests.CodeGen*.dll",
+        "UnityQuickTests.Codegen*.dll",
+        "Mono.Cecil*.dll",
+        "Unity.CompilationPipeline.Common.dll"
+    )
+    $leakedPlayerAssemblies = foreach ($pattern in $forbiddenPlayerAssemblyPatterns) {
+        Get-ChildItem `
+            -Path $buildOutputPath `
+            -Recurse `
+            -Filter $pattern `
+            -ErrorAction SilentlyContinue
+    }
 
-    if ($leakedEditorAssemblies) {
-        $names = $leakedEditorAssemblies | ForEach-Object { $_.Name }
-        throw "Editor assembly leaked into player build: $($names -join ', '). See $logPath."
+    if ($leakedPlayerAssemblies) {
+        $names = $leakedPlayerAssemblies |
+            ForEach-Object { $_.Name } |
+            Sort-Object -Unique
+        throw "Editor-only assembly leaked into player build: $($names -join ', '). See $logPath."
     }
 
     Write-Host "PlayerBuild smoke result: passed"

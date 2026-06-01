@@ -24,11 +24,11 @@
 - `EditMode-results.xml` и `PlayMode-results.xml` содержат машинно-читаемый
   результат;
 - `EditMode.log` и `PlayMode.log` содержат полный Unity log.
-- `PlayerBuildSmoke.log` содержит лог минимальной player build проверки.
+- `PlayerBuildSmoke.log` содержит лог player build smoke-проверки.
 
 Скрипт возвращает ошибку, если Unity завершился с ненулевым кодом, не создал XML
 или сообщил о проваленных тестах. Для `PlayerBuild` он также проверяет, что
-сборка создана и в выходную папку не попал `UnityQuickTests.Editor*.dll`.
+сборка создана и в выходную папку не попали Editor/CodeGen/Cecil assemblies.
 По умолчанию каждый слой ограничен пятью минутами. Лимит можно изменить
 параметром `-TimeoutSeconds`.
 
@@ -78,6 +78,7 @@ Tests/
 - отсутствие duplicate invocation при manual registry fallback после ILPP;
 - `this(...)` constructor chaining без двойной регистрации;
 - fast `WillProcess` filtering для CodeGen layer;
+- отклонение player assemblies без `UNITY_EDITOR` define в `WillProcess`;
 - weak registry: duplicate registration, unregister и GC cleanup;
 - очистку registry при входе и выходе из Play Mode для сценариев без domain
   reload;
@@ -86,6 +87,16 @@ Tests/
 
 `Tests/Runtime` проверяет, что `QuickTestInputPoller` действительно получает
 `Update` в player loop и отправляет событие.
+
+`PlayerBuild` smoke через `QuickTestPlayerBuildSmoke.Run` строит минимальный
+StandaloneWindows64 player и проверяет:
+
+- отсутствие `UnityQuickTests.Editor`, `Unity.UrbanDruids.UnityQuickTests.CodeGen`,
+  `Mono.Cecil` и `Unity.CompilationPipeline.Common` assemblies в output;
+- отсутствие `QuickTestInputPoller` type в managed player script assemblies;
+- отсутствие call sites к `QuickTestInstanceRegistry.Register` в managed player
+  script assemblies;
+- наличие runtime quick-test attributes как безвредной player metadata.
 
 ## Почему hotkey тестируется через fake input
 

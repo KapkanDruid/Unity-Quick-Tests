@@ -13,13 +13,17 @@
   targets;
 - вызов instance `void` методов без параметров на plain C# targets через
   editor-only IL PostProcessor registration с ручным weak registry fallback;
+- player build smoke подтверждает отсутствие editor-only assemblies, hidden
+  poller type и registry registration call sites в managed player script
+  assemblies;
+- runtime quick-test attributes остаются в player как безвредные metadata;
 - интервалы в editor update ticks и секундах;
 - режимы `Once` и `Repeat`;
 - Play Mode hotkey через скрытый editor-only `QuickTestInputPoller`;
 - ограниченный Edit Mode fallback через `SceneView.duringSceneGui`.
 
-Главная следующая цель: проверить безопасность player build после включения
-автоматической регистрации plain C# targets через IL PostProcessor.
+Главная следующая цель: улучшить editor UX и диагностику после проверки
+безопасности player build.
 
 ## Принципы разработки
 
@@ -147,12 +151,12 @@ registry-модель доказана прототипом.
 
 Задачи:
 
-- [ ] Проверить отсутствие Editor assemblies в player.
-- [ ] Проверить отсутствие hidden input poller в player.
-- [ ] Проверить отсутствие editor-only injected registration calls в player.
-- [ ] Решить, оставлять ли runtime attributes как безвредные metadata или
+- [x] Проверить отсутствие Editor assemblies в player.
+- [x] Проверить отсутствие hidden input poller в player.
+- [x] Проверить отсутствие editor-only injected registration calls в player.
+- [x] Решить, оставлять ли runtime attributes как безвредные metadata или
   исключать их define-ами.
-- [ ] Добавить воспроизводимую build smoke-проверку.
+- [x] Добавить воспроизводимую build smoke-проверку.
 
 Критерий готовности:
 
@@ -201,10 +205,20 @@ registry-модель доказана прототипом.
 - CodeGen assembly должна иметь `autoReferenced: false`; consumer assemblies
   получают регистрацию через ILPP, а тестовая assembly ссылается на неё явно.
 
+Подтверждённое player-build решение:
+
+- runtime атрибуты остаются в player как metadata, чтобы пользовательские
+  assemblies могли компилироваться без define-ветвления;
+- `QuickTestInstanceRegistry.Register/Unregister` остаются доступными runtime-коду
+  как `Conditional("UNITY_EDITOR")` no-op для player source calls;
+- `QuickTestInputPoller`, runner, CodeGen и injected registry call sites не должны
+  попадать в player output.
+
 ## Ближайшая рекомендуемая итерация
 
-Следующая итерация: **Этап 5**. Нужно проверить, что editor tooling, hidden input
-poller и injected registration calls не попадают в player build.
+Следующая итерация: **Этап 6**. Нужно улучшить editor UX и диагностику:
+конфликтные hotkeys, список зарегистрированных tests, target scope и ограниченные
+warnings для missing targets.
 
 ## Правило обновления roadmap
 
