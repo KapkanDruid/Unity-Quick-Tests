@@ -17,7 +17,9 @@ namespace: UnityQuickTests
 
 В `0.1.0` поддерживаются `static void` методы без параметров. Текущая ветка
 прототипа также поддерживает instance `void` методы без параметров на живых
-`UnityEngine.Object` targets.
+`UnityEngine.Object` targets и на plain C# instances. Обычные C# service-классы
+регистрируются автоматически через editor-only IL PostProcessor, а ручной weak
+registry остаётся fallback.
 
 Play Mode hotkey уже проверен вручную. Рабочий путь использует скрытый editor-only
 `QuickTestInputPoller : MonoBehaviour`, который получает настоящий player-loop
@@ -25,8 +27,8 @@ Play Mode hotkey уже проверен вручную. Рабочий путь
 коротких состояний клавиатуры.
 
 Edit Mode hotkey остаётся ограниченным fallback через `SceneView.duringSceneGui`.
-Поддержка plain C# instance methods через weak registry и IL PostProcessor
-остаётся планом следующих итераций в порядке, описанном ниже.
+Поддержка plain C# instance methods реализована через weak registry и
+constructor injection в `Unity.UrbanDruids.UnityQuickTests.CodeGen`.
 
 ## Цель
 
@@ -94,7 +96,7 @@ Assets/_Game/ExternalModules/UnityQuickTests/
 UnityQuickTests/
   Runtime/
   Editor/
-  Codegen.Editor/
+  Codegen.Editor/  # asmdef name: Unity.UrbanDruids.UnityQuickTests.CodeGen
   package.json
 ```
 
@@ -132,18 +134,21 @@ private static void RunStaticTest()
 - `ScriptableObject`;
 - другие `UnityEngine.Object` subclasses, если Unity может их найти.
 
-### 5. Plain C# instance methods требуют instance registry
+### 5. Plain C# instance methods используют weak instance registry
 
 Проблема:
 
 - reflection не умеет найти все живые экземпляры обычного C# класса;
 - для класса вроде `ArtifactModel : IService` нельзя универсально получить instance без `ServiceLocator`, DI container или другого registry.
 
-Решение на будущее:
+Решение:
 
-- добавить editor-only weak instance registry;
-- позже автоматически регистрировать plain C# instances через IL PostProcessor;
-- до ILPP проверить эту модель вручную на прототипе.
+- editor-only IL PostProcessor injects `QuickTestInstanceRegistry.Register(this)`
+  в constructors поддерживаемых plain C# types;
+- registry хранит only weak references и не удерживает service objects в памяти;
+- `Unregister(object target)` доступен как explicit cleanup;
+- ручной `QuickTestInstanceRegistry.Register(this)` остаётся fallback для
+  serializers и нестандартных factory paths.
 
 ### 6. Инструмент не должен создавать target objects
 
@@ -178,17 +183,22 @@ private static void RunStaticTest()
 - если пользователь нажал hotkey в неподходящий момент, это пользовательская ошибка тестового метода;
 - missing target должен давать тихое отсутствие вызова или ограниченный warning, но не сложную state-machine логику.
 
-### 9. IL PostProcessor только после проверки прототипа
+### 9. IL PostProcessor как узкий слой поверх registry
 
 Решение:
 
-- сначала проверить runner + ручной weak registry;
-- только потом добавлять IL injection как слой удобства.
+- runner + ручной weak registry проверены до включения ILPP;
+- ILPP реализован как `Unity.UrbanDruids.UnityQuickTests.CodeGen`;
+- assembly name использует шаблон `Unity.*.CodeGen`, потому что Unity только
+  такие assemblies отправляет в ILPP runner;
+- `autoReferenced: false`, так как Unity запрещает auto-reference для CodeGen
+  assemblies.
 
 Причина:
 
 - IL weaving сложнее отлаживать;
-- сначала нужно доказать, что target resolution и invocation behavior сами по себе подходят.
+- target resolution и invocation behavior остаются в проверенной registry-модели;
+- consumer assemblies не получают compile-time dependency на CodeGen assembly.
 
 ## Проблемы и потенциальные решения
 
@@ -241,6 +251,8 @@ private static void RunStaticTest()
 - обрабатывать только assemblies, которые ссылаются на `UnityQuickTests.Runtime`;
 - исключать `UnityQuickTests.*`, Unity assemblies, vendor/package assemblies при необходимости;
 - после загрузки через Cecil дополнительно проверять наличие quick-test атрибутов.
+- возвращать diagnostics для unsupported types, но не менять assembly, если в ней
+  нет supported instance quick-test methods.
 
 Пример правила:
 
@@ -258,21 +270,35 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 }
 ```
 
-### autoReferenced может расширить область сканирования
+### CodeGen packaging зависит от имени assembly
+
+Проблема:
+
+- Unity 6000.2 компилирует обычные Editor assemblies, но не добавляет их в ILPP
+  runner;
+- assemblies с именем `Unity.*.CodeGen` распознаются как CodeGen;
+- CodeGen assemblies не могут иметь `autoReferenced: true`.
+
+Решение:
+
+- asmdef name: `Unity.UrbanDruids.UnityQuickTests.CodeGen`;
+- namespace остаётся `UnityQuickTests.Codegen.Editor`;
+- `autoReferenced: false`;
+- tests reference CodeGen assembly explicitly; consumer assemblies do not.
+
+### autoReferenced runtime может расширить область сканирования
 
 Проблема:
 
 - если runtime asmdef `autoReferenced: true`, больше assemblies могут получить reference автоматически;
 - ILPP будет чаще заходить в assemblies, где quick-test атрибутов нет.
 
-Решения:
+Текущее решение:
 
-- оставить `autoReferenced: true` для удобства, но делать глубокую проверку атрибутов;
-- или сделать `autoReferenced: false`, чтобы пользователь явно подключал `UnityQuickTests.Runtime` только в нужные asmdef.
-
-Рекомендация для внешнего package:
-
-- рассмотреть `autoReferenced: false`, если ILPP станет частью модуля.
+- runtime остаётся `autoReferenced: true` для простого подключения;
+- `WillProcess` и Cecil-scan оставляют обработку дешёвой и узкой;
+- перейти на explicit runtime references можно позже, если profiling покажет
+  лишний объём обработки.
 
 ### IL weaving может сломать сборку трудными ошибками
 
@@ -372,9 +398,11 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 
 - runner и ILPP держать в Editor assemblies;
 - runtime атрибуты могут остаться в player как безвредные metadata, либо выноситься define-ами позже;
+- `QuickTestInstanceRegistry.Register/Unregister` доступны runtime-коду как
+  conditional no-op в player build и не зависят от `UnityEditor`;
 - injected registration call должен быть editor-only.
 
-## Что нужно проверить прототипом перед ILPP
+## Что проверено прототипом перед ILPP
 
 1. Static method discovery and invocation.
 
@@ -397,7 +425,7 @@ public sealed class QuickTestMonoSmoke : MonoBehaviour
 }
 ```
 
-3. Plain C# service through manual weak registry.
+3. Plain C# service through weak registry and manual fallback.
 
 ```csharp
 public sealed class PlainService
@@ -450,32 +478,38 @@ Expected:
 - no injected editor-only registry calls in player;
 - no compile errors in non-editor build target.
 
-## Future ILPP plan
+## Current ILPP implementation
 
-After prototype validation:
+After registry prototype validation:
 
-1. Add `UnityQuickTests.Codegen.Editor` assembly.
-2. Implement IL PostProcessor.
-3. In `WillProcess`, filter by assembly references to `UnityQuickTests.Runtime`.
-4. Load candidate assembly with Cecil only after fast filtering.
-5. Find types containing instance quick-test methods.
-6. Skip unsupported types:
+1. `Unity.UrbanDruids.UnityQuickTests.CodeGen` contains the editor-only
+   `QuickTestILPostProcessor`.
+2. `WillProcess` filters by assembly references to `UnityQuickTests.Runtime`,
+   excludes package/Unity/System/vendor assemblies, and requires `UNITY_EDITOR`.
+3. Candidate assemblies are loaded with Cecil only after fast filtering.
+4. Types are patched only when they contain supported instance quick-test
+   methods.
+5. Unsupported types are skipped:
    - `UnityEngine.Object` subclasses;
    - value types;
    - abstract types;
    - static classes;
    - compiler-generated types;
    - generic definitions until explicitly supported.
-7. Inject editor-only registration into all instance constructors.
-8. Store registered objects through weak references.
-9. Add diagnostics for skipped or failed cases.
-10. Verify with small sample assemblies before applying to project gameplay assemblies.
+6. Constructor injection adds `QuickTestInstanceRegistry.Register(this)` before
+   `ret` in non-chaining instance constructors.
+7. `this(...)` constructor chaining is handled by patching only the terminal
+   constructor body.
+8. Registered objects are still stored through weak references.
+9. Diagnostics are emitted for skipped or failed cases.
+10. A dedicated `QuickTestCodegen.Consumer` test assembly validates automatic
+    registration, invocation and manual fallback deduplication.
 
-## Current known mismatch in existing prototype
+## Current validated prototype
 
-Unity object instance methods are supported. Plain C# instance methods are still
-not registered until the manual weak registry prototype exists. This method is
-therefore still skipped:
+Unity object instance methods are supported through Unity lookup. Plain C#
+instance methods are supported when their live objects are constructed through
+supported constructors. Manual registration remains valid:
 
 ```csharp
 public class ArtifactModel
@@ -491,13 +525,15 @@ Reason:
 
 - reflection cannot enumerate live plain C# heap instances;
 - the package must not depend on project-specific service locators;
-- plain C# targets require the weak registry from the next phase.
+- plain C# targets are therefore supplied by the package weak registry, either
+  through ILPP constructor injection or manual fallback.
 
-Required next correction:
+Next correction:
 
-- add manual weak registry for plain C# prototype;
-- keep static direct and Unity object lookup routing unchanged;
-- later add ILPP automatic registration only after the registry model is proven.
+- verify player build safety now that injected calls exist in editor
+  assemblies;
+- keep static direct, Unity object lookup, registry routing and manual fallback
+  unchanged.
 
 ## Confidence assessment
 
@@ -508,16 +544,17 @@ High confidence:
 - static invocation is straightforward;
 - Unity object lookup for instance methods is feasible;
 - weak registry solves plain C# instance lookup without project-specific service dependencies;
-- ILPP can be filtered by assembly references and attributes.
+- ILPP can be filtered by assembly references and attributes;
+- Unity 6000.2 recognizes the `Unity.*.CodeGen` packaging pattern.
 
 Medium confidence:
 
-- constructor injection will work for ordinary project service classes;
+- constructor injection works for ordinary project service classes in the
+  package smoke assembly;
 - domain reload disabled behavior can be made clean with registry pruning and lifecycle clearing.
 
 Needs prototype/testing:
 
-- exact Unity 6000.2 IL PostProcessor packaging details;
 - behavior with serializers and nonstandard construction paths;
 - player-build exclusion of injected calls;
 - generic/inherited method policy;

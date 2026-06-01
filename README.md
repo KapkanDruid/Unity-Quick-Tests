@@ -7,9 +7,11 @@ tags: [editor, tests, tooling]
 # Unity Quick Tests
 
 Модуль добавляет быстрые editor-only вызовы методов через атрибуты. Он
-поддерживает static methods и instance methods на уже существующих
-`UnityEngine.Object` targets. Пакет не зависит от игрового кода и рассчитан на
-подключение как отдельный Unity package.
+поддерживает static methods, instance methods на уже существующих
+`UnityEngine.Object` targets и plain C# instances. Для обычных C# service-классов
+editor-only IL PostProcessor автоматически добавляет weak registration в
+constructors поддерживаемых типов. Пакет не зависит от игрового кода и рассчитан
+на подключение как отдельный Unity package.
 
 ## Установка
 
@@ -54,6 +56,15 @@ public sealed class MonoSmokeTest : MonoBehaviour
         Debug.Log(name);
     }
 }
+
+public sealed class PlainServiceSmokeTest
+{
+    [QuickTestHotkey(KeyCode.LeftControl, KeyCode.P)]
+    private void RunOnLiveService()
+    {
+        Debug.Log("Auto-registered plain C# service");
+    }
+}
 ```
 
 Ограничения:
@@ -64,8 +75,12 @@ public sealed class MonoSmokeTest : MonoBehaviour
 - `MonoBehaviour` targets ищутся среди loaded scene instances, включая inactive;
 - `ScriptableObject` и `EditorWindow` targets ищутся только среди уже loaded
   objects, без автоматической загрузки assets через `AssetDatabase`;
-- plain C# instance methods пока пропускаются с warning до появления weak
-  registry;
+- поддерживаемые plain C# instance targets автоматически регистрируются через
+  editor-only IL PostProcessor при выполнении constructor;
+- ручной `QuickTestInstanceRegistry.Register(this)` остаётся fallback для
+  serializers, нестандартных factory paths и неподдерживаемых типов;
+- registry хранит weak references, дедуплицирует повторную регистрацию и
+  очищается вокруг Play Mode transitions;
 - hotkey в edit mode поддерживает модификаторы `Control`, `Shift`, `Alt`, `Command` плюс одну основную клавишу;
 - hotkey в Play Mode проверяется через скрытый editor-only `MonoBehaviour`, который работает в обычном player-loop `Update`;
 - hotkey в edit mode пока срабатывает из Scene View, потому что редакторские события клавиатуры приходят через GUI event loop;

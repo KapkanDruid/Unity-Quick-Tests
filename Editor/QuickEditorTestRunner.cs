@@ -233,11 +233,17 @@ namespace UnityQuickTests.Editor
 
         private static void OnPlayModeStateChanged(PlayModeStateChange stateChange)
         {
-            if (stateChange != PlayModeStateChange.ExitingPlayMode)
-                return;
+            if (stateChange == PlayModeStateChange.ExitingEditMode ||
+                stateChange == PlayModeStateChange.ExitingPlayMode)
+            {
+                QuickTestInstanceRegistry.Clear();
+            }
 
-            ResetHotkeyInputState();
-            _inputPoller = null;
+            if (stateChange == PlayModeStateChange.ExitingPlayMode)
+            {
+                ResetHotkeyInputState();
+                _inputPoller = null;
+            }
         }
 
         private static void OnSceneGui(SceneView sceneView)

@@ -54,6 +54,7 @@ host-проект скачивается вместе с Git repository, но н
 
 ```text
 Tests/
+  CodegenConsumer/ отдельная assembly для ILPP auto-registration smoke
   Editor/    быстрые Edit Mode проверки внутренних компонентов
   Runtime/   Play Mode проверки поведения в player loop
 ```
@@ -69,10 +70,17 @@ Tests/
 - сброс состояния hotkey между Play Mode sessions;
 - reflection-вызов и логирование исключений;
 - discovery поддерживаемых и неподдерживаемых static-методов;
-- discovery Unity object instance methods и пропуск plain C# targets до weak
-  registry;
+- discovery Unity object и plain C# instance methods;
 - invocation routing на несколько `MonoBehaviour` instances;
 - invocation routing на loaded `ScriptableObject`;
+- invocation routing на зарегистрированные plain C# instances;
+- ILPP constructor injection для plain C# service targets;
+- отсутствие duplicate invocation при manual registry fallback после ILPP;
+- `this(...)` constructor chaining без двойной регистрации;
+- fast `WillProcess` filtering для CodeGen layer;
+- weak registry: duplicate registration, unregister и GC cleanup;
+- очистку registry при входе и выходе из Play Mode для сценариев без domain
+  reload;
 - lookup loaded `EditorWindow` через Unity resources;
 - ограниченный warning при missing instance target.
 

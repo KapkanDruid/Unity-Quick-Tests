@@ -139,6 +139,22 @@ namespace UnityQuickTests.Editor.Tests
             Assert.That(_invocationCount, Is.EqualTo(3));
         }
 
+        [Test]
+        public void PlayModeTransitions_ClearRegisteredPlainCSharpInstances()
+        {
+            var target = new RegistryFixture();
+
+            QuickTestInstanceRegistry.Register(target);
+            Assert.That(QuickTestInstanceRegistry.FindTargets(typeof(RegistryFixture)), Is.Not.Empty);
+
+            QuickEditorTestRunner.HandlePlayModeStateChangedForTests(PlayModeStateChange.ExitingEditMode);
+            Assert.That(QuickTestInstanceRegistry.FindTargets(typeof(RegistryFixture)), Is.Empty);
+
+            QuickTestInstanceRegistry.Register(target);
+            QuickEditorTestRunner.HandlePlayModeStateChangedForTests(PlayModeStateChange.ExitingPlayMode);
+            Assert.That(QuickTestInstanceRegistry.FindTargets(typeof(RegistryFixture)), Is.Empty);
+        }
+
         private static QuickTestRegistration CreateRegistration(
             string methodName,
             IReadOnlyList<QuickTestHotkeyAttribute> hotkeyAttributes = null,
@@ -156,6 +172,10 @@ namespace UnityQuickTests.Editor.Tests
         private static void Increment()
         {
             _invocationCount++;
+        }
+
+        private sealed class RegistryFixture
+        {
         }
 
         private sealed class FakeInputSource : IQuickTestInputSource

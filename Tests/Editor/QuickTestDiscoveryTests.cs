@@ -53,6 +53,19 @@ namespace UnityQuickTests.Editor.Tests
         }
 
         [Test]
+        public void FindRegistrations_ReturnsSupportedPlainCSharpInstanceMethods()
+        {
+            var registrations = QuickTestDiscovery.FindRegistrations(new[] { typeof(PlainCSharpFixture) });
+
+            QuickTestRegistration registration = registrations.Single();
+
+            Assert.That(registration.Method.Method.Name, Is.EqualTo(nameof(PlainCSharpFixture.PlainHotkey)));
+            Assert.That(registration.Method.TargetDescription, Is.EqualTo("registered instance"));
+            Assert.That(registration.HotkeyAttributes.Count, Is.EqualTo(1));
+            Assert.That(registration.ScheduleAttributes, Is.Empty);
+        }
+
+        [Test]
         public void FindRegistrations_RejectsUnsupportedStaticMethods()
         {
             ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.WithParameter), "methods must be parameterless");
@@ -68,20 +81,20 @@ namespace UnityQuickTests.Editor.Tests
         public void FindRegistrations_RejectsUnsupportedInstanceTargets()
         {
             ExpectIgnoredWarning(
-                typeof(PlainCSharpFixture),
-                nameof(PlainCSharpFixture.PlainHotkey),
-                "plain C# instance methods require the instance registry planned for the next phase"
-            );
-            ExpectIgnoredWarning(
                 typeof(InvalidEditorFixture),
                 nameof(InvalidEditorFixture.EditorHotkey),
                 "UnityEditor.Editor targets are not supported until their lifecycle is validated"
             );
+            ExpectIgnoredWarning(
+                typeof(InvalidValueTypeFixture),
+                nameof(InvalidValueTypeFixture.ValueHotkey),
+                "value type target types are not supported"
+            );
 
             var registrations = QuickTestDiscovery.FindRegistrations(new[]
             {
-                typeof(PlainCSharpFixture),
-                typeof(InvalidEditorFixture)
+                typeof(InvalidEditorFixture),
+                typeof(InvalidValueTypeFixture)
             });
 
             Assert.That(registrations, Is.Empty);
@@ -163,6 +176,14 @@ namespace UnityQuickTests.Editor.Tests
         {
             [QuickTestHotkey(KeyCode.T)]
             public void EditorHotkey()
+            {
+            }
+        }
+
+        private struct InvalidValueTypeFixture
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void ValueHotkey()
             {
             }
         }

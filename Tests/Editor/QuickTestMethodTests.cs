@@ -16,6 +16,13 @@ namespace UnityQuickTests.Editor.Tests
         public void SetUp()
         {
             _invocationCount = 0;
+            QuickTestInstanceRegistry.Clear();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            QuickTestInstanceRegistry.Clear();
         }
 
         [Test]
@@ -45,11 +52,24 @@ namespace UnityQuickTests.Editor.Tests
         }
 
         [Test]
+        public void Invoke_CallsPlainCSharpInstanceMethodOnAllRegisteredTargets()
+        {
+            QuickTestInstanceRegistry.Register(new InstanceFixture());
+            QuickTestInstanceRegistry.Register(new InstanceFixture());
+
+            QuickTestMethod method = CreateInstanceMethod(nameof(InstanceFixture.Increment));
+
+            method.Invoke();
+
+            Assert.That(_invocationCount, Is.EqualTo(2));
+        }
+
+        [Test]
         public void Invoke_MissingInstanceTarget_LogsWarningOnceUntilTargetAppears()
         {
             var resolver = new FakeTargetResolver();
             QuickTestMethod method = CreateInstanceMethod(nameof(InstanceFixture.Increment), resolver);
-            string warning = $"[UnityQuickTests] {method.DisplayName} was triggered but no live Unity object target was found.";
+            string warning = $"[UnityQuickTests] {method.DisplayName} was triggered but no live registered instance target was found.";
 
             LogAssert.Expect(LogType.Warning, warning);
             method.Invoke();
@@ -88,6 +108,14 @@ namespace UnityQuickTests.Editor.Tests
                 .GetMethod(name, BindingFlags.Instance | BindingFlags.Public);
 
             return new QuickTestMethod(method, resolver);
+        }
+
+        private static QuickTestMethod CreateInstanceMethod(string name)
+        {
+            MethodInfo method = typeof(InstanceFixture)
+                .GetMethod(name, BindingFlags.Instance | BindingFlags.Public);
+
+            return new QuickTestMethod(method);
         }
 
         private static void Increment()

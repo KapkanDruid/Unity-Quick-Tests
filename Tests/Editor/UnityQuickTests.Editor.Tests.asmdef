@@ -3,7 +3,9 @@
     "rootNamespace": "UnityQuickTests.Editor.Tests",
     "references": [
         "UnityQuickTests.Runtime",
-        "UnityQuickTests.Editor"
+        "UnityQuickTests.Editor",
+        "Unity.UrbanDruids.UnityQuickTests.CodeGen",
+        "QuickTestCodegen.Consumer"
     ],
     "includePlatforms": [
         "Editor"

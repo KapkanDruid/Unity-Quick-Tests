@@ -115,12 +115,9 @@ namespace UnityQuickTests.Editor
                 return false;
             }
 
-            if (!typeof(UnityEngine.Object).IsAssignableFrom(declaringType))
+            if (declaringType.IsValueType)
             {
-                Debug.LogWarning(
-                    $"[UnityQuickTests] {displayName} is ignored: plain C# instance methods require the instance registry planned for the next phase."
-                );
-
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: value type target types are not supported.");
                 return false;
             }
 

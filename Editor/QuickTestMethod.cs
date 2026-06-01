@@ -15,7 +15,7 @@ namespace UnityQuickTests.Editor
         public string TargetDescription { get; }
 
         public QuickTestMethod(MethodInfo method)
-            : this(method, UnityObjectQuickTestTargetResolver.Instance)
+            : this(method, QuickTestTargetResolver.Instance)
         {
         }
 
@@ -23,8 +23,8 @@ namespace UnityQuickTests.Editor
         {
             Method = method;
             DisplayName = $"{method.DeclaringType?.FullName}.{method.Name}";
-            TargetDescription = method.IsStatic ? "static" : "Unity object";
-            _targetResolver = targetResolver ?? UnityObjectQuickTestTargetResolver.Instance;
+            TargetDescription = GetTargetDescription(method);
+            _targetResolver = targetResolver ?? QuickTestTargetResolver.Instance;
         }
 
         public void Invoke()
@@ -72,8 +72,21 @@ namespace UnityQuickTests.Editor
             if (_hasLoggedMissingTarget)
                 return;
 
-            Debug.LogWarning($"[UnityQuickTests] {DisplayName} was triggered but no live Unity object target was found.");
+            Debug.LogWarning($"[UnityQuickTests] {DisplayName} was triggered but no live {TargetDescription} target was found.");
             _hasLoggedMissingTarget = true;
+        }
+
+        private static string GetTargetDescription(MethodInfo method)
+        {
+            if (method.IsStatic)
+                return "static";
+
+            Type declaringType = method.DeclaringType;
+
+            if (declaringType != null && typeof(UnityEngine.Object).IsAssignableFrom(declaringType))
+                return "Unity object";
+
+            return "registered instance";
         }
     }
 }
