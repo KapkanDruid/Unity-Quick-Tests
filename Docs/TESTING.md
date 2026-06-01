@@ -68,7 +68,13 @@ Tests/
 - rising edge hotkey через детерминированный fake input;
 - сброс состояния hotkey между Play Mode sessions;
 - reflection-вызов и логирование исключений;
-- discovery поддерживаемых и неподдерживаемых static-методов.
+- discovery поддерживаемых и неподдерживаемых static-методов;
+- discovery Unity object instance methods и пропуск plain C# targets до weak
+  registry;
+- invocation routing на несколько `MonoBehaviour` instances;
+- invocation routing на loaded `ScriptableObject`;
+- lookup loaded `EditorWindow` через Unity resources;
+- ограниченный warning при missing instance target.
 
 `Tests/Runtime` проверяет, что `QuickTestInputPoller` действительно получает
 `Update` в player loop и отправляет событие.

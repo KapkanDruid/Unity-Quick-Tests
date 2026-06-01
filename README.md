@@ -6,8 +6,10 @@ tags: [editor, tests, tooling]
 
 # Unity Quick Tests
 
-Модуль добавляет быстрые editor-only вызовы статических методов через атрибуты.
-Папка `UnityQuickTests` не зависит от игрового кода и рассчитана на перенос в отдельный Unity package.
+Модуль добавляет быстрые editor-only вызовы методов через атрибуты. Он
+поддерживает static methods и instance methods на уже существующих
+`UnityEngine.Object` targets. Пакет не зависит от игрового кода и рассчитан на
+подключение как отдельный Unity package.
 
 ## Установка
 
@@ -43,11 +45,27 @@ public static class EditorSmokeTests
         Debug.Log("Every 2.5 seconds");
     }
 }
+
+public sealed class MonoSmokeTest : MonoBehaviour
+{
+    [QuickTestHotkey(KeyCode.LeftControl, KeyCode.M)]
+    private void RunOnLiveMonoBehaviour()
+    {
+        Debug.Log(name);
+    }
+}
 ```
 
 Ограничения:
 
-- методы должны быть `static`, `void` и без параметров;
+- методы должны быть `void` и без параметров;
+- static methods вызываются напрямую;
+- instance methods поддерживаются для живых `UnityEngine.Object` targets;
+- `MonoBehaviour` targets ищутся среди loaded scene instances, включая inactive;
+- `ScriptableObject` и `EditorWindow` targets ищутся только среди уже loaded
+  objects, без автоматической загрузки assets через `AssetDatabase`;
+- plain C# instance methods пока пропускаются с warning до появления weak
+  registry;
 - hotkey в edit mode поддерживает модификаторы `Control`, `Shift`, `Alt`, `Command` плюс одну основную клавишу;
 - hotkey в Play Mode проверяется через скрытый editor-only `MonoBehaviour`, который работает в обычном player-loop `Update`;
 - hotkey в edit mode пока срабатывает из Scene View, потому что редакторские события клавиатуры приходят через GUI event loop;

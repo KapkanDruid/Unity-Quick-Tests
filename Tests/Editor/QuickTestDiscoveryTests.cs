@@ -26,29 +26,72 @@ namespace UnityQuickTests.Editor.Tests
                 registration => registration.Method.Method.Name == "Schedule"
             );
 
-            Assert.That(hotkeyRegistration.HotkeyAttributes, Has.Count.EqualTo(1));
+            Assert.That(hotkeyRegistration.HotkeyAttributes.Count, Is.EqualTo(1));
             Assert.That(hotkeyRegistration.ScheduleAttributes, Is.Empty);
             Assert.That(scheduleRegistration.HotkeyAttributes, Is.Empty);
-            Assert.That(scheduleRegistration.ScheduleAttributes, Has.Count.EqualTo(1));
+            Assert.That(scheduleRegistration.ScheduleAttributes.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void FindRegistrations_ReturnsSupportedUnityObjectInstanceMethods()
+        {
+            var registrations = QuickTestDiscovery.FindRegistrations(new[]
+            {
+                typeof(ValidMonoBehaviourFixture),
+                typeof(ValidScriptableObjectFixture),
+                typeof(ValidEditorWindowFixture)
+            });
+
+            Assert.That(registrations.Select(registration => registration.Method.Method.Name), Is.EquivalentTo(new[]
+            {
+                nameof(ValidMonoBehaviourFixture.MonoHotkey),
+                "ScriptableHotkey",
+                nameof(ValidEditorWindowFixture.WindowHotkey)
+            }));
+
+            Assert.That(registrations.All(registration => !registration.Method.Method.IsStatic), Is.True);
         }
 
         [Test]
         public void FindRegistrations_RejectsUnsupportedStaticMethods()
         {
-            ExpectIgnoredWarning(nameof(InvalidFixtures.WithParameter), "methods must be parameterless");
-            ExpectIgnoredWarning(nameof(InvalidFixtures.WithReturnValue), "only void methods are supported");
-            ExpectIgnoredWarning(nameof(InvalidFixtures.Generic), "generic methods are not supported");
+            ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.WithParameter), "methods must be parameterless");
+            ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.WithReturnValue), "only void methods are supported");
+            ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.Generic), "generic methods are not supported");
 
             var registrations = QuickTestDiscovery.FindRegistrations(new[] { typeof(InvalidFixtures) });
 
             Assert.That(registrations, Is.Empty);
         }
 
-        private static void ExpectIgnoredWarning(string methodName, string reason)
+        [Test]
+        public void FindRegistrations_RejectsUnsupportedInstanceTargets()
+        {
+            ExpectIgnoredWarning(
+                typeof(PlainCSharpFixture),
+                nameof(PlainCSharpFixture.PlainHotkey),
+                "plain C# instance methods require the instance registry planned for the next phase"
+            );
+            ExpectIgnoredWarning(
+                typeof(InvalidEditorFixture),
+                nameof(InvalidEditorFixture.EditorHotkey),
+                "UnityEditor.Editor targets are not supported until their lifecycle is validated"
+            );
+
+            var registrations = QuickTestDiscovery.FindRegistrations(new[]
+            {
+                typeof(PlainCSharpFixture),
+                typeof(InvalidEditorFixture)
+            });
+
+            Assert.That(registrations, Is.Empty);
+        }
+
+        private static void ExpectIgnoredWarning(Type declaringType, string methodName, string reason)
         {
             LogAssert.Expect(
                 LogType.Warning,
-                $"[UnityQuickTests] {typeof(InvalidFixtures).FullName}.{methodName} is ignored: {reason}."
+                $"[UnityQuickTests] {declaringType.FullName}.{methodName} is ignored: {reason}."
             );
         }
 
@@ -80,6 +123,46 @@ namespace UnityQuickTests.Editor.Tests
 
             [QuickTestHotkey(KeyCode.T)]
             public static void Generic<T>()
+            {
+            }
+        }
+
+        private sealed class ValidMonoBehaviourFixture : MonoBehaviour
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void MonoHotkey()
+            {
+            }
+        }
+
+        private sealed class ValidScriptableObjectFixture : ScriptableObject
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            private void ScriptableHotkey()
+            {
+            }
+        }
+
+        private sealed class ValidEditorWindowFixture : UnityEditor.EditorWindow
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void WindowHotkey()
+            {
+            }
+        }
+
+        private sealed class PlainCSharpFixture
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void PlainHotkey()
+            {
+            }
+        }
+
+        private sealed class InvalidEditorFixture : UnityEditor.Editor
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void EditorHotkey()
             {
             }
         }

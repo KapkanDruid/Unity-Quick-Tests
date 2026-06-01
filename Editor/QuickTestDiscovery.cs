@@ -8,7 +8,12 @@ namespace UnityQuickTests.Editor
 {
     internal static class QuickTestDiscovery
     {
-        private const BindingFlags MethodFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags MethodFlags =
+            BindingFlags.Static |
+            BindingFlags.Instance |
+            BindingFlags.Public |
+            BindingFlags.NonPublic |
+            BindingFlags.DeclaredOnly;
 
         public static IReadOnlyList<QuickTestRegistration> FindRegistrations()
         {
@@ -67,12 +72,6 @@ namespace UnityQuickTests.Editor
         {
             string displayName = $"{method.DeclaringType?.FullName}.{method.Name}";
 
-            if (!method.IsStatic)
-            {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: only static methods are supported.");
-                return false;
-            }
-
             if (method.ContainsGenericParameters)
             {
                 Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: generic methods are not supported.");
@@ -88,6 +87,49 @@ namespace UnityQuickTests.Editor
             if (method.ReturnType != typeof(void))
             {
                 Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: only void methods are supported.");
+                return false;
+            }
+
+            return method.IsStatic || CanInvokeInstanceMethod(method, displayName);
+        }
+
+        private static bool CanInvokeInstanceMethod(MethodInfo method, string displayName)
+        {
+            Type declaringType = method.DeclaringType;
+
+            if (declaringType == null)
+            {
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: declaring type could not be resolved.");
+                return false;
+            }
+
+            if (method.IsAbstract)
+            {
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: abstract methods are not supported.");
+                return false;
+            }
+
+            if (declaringType.IsAbstract)
+            {
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: abstract target types are not supported.");
+                return false;
+            }
+
+            if (!typeof(UnityEngine.Object).IsAssignableFrom(declaringType))
+            {
+                Debug.LogWarning(
+                    $"[UnityQuickTests] {displayName} is ignored: plain C# instance methods require the instance registry planned for the next phase."
+                );
+
+                return false;
+            }
+
+            if (typeof(UnityEditor.Editor).IsAssignableFrom(declaringType))
+            {
+                Debug.LogWarning(
+                    $"[UnityQuickTests] {displayName} is ignored: UnityEditor.Editor targets are not supported until their lifecycle is validated."
+                );
+
                 return false;
             }
 

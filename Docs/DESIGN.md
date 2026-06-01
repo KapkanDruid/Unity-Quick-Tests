@@ -15,7 +15,9 @@ editor assembly: UnityQuickTests.Editor
 namespace: UnityQuickTests
 ```
 
-В `0.1.0` реально поддерживаются только `static void` методы без параметров.
+В `0.1.0` поддерживаются `static void` методы без параметров. Текущая ветка
+прототипа также поддерживает instance `void` методы без параметров на живых
+`UnityEngine.Object` targets.
 
 Play Mode hotkey уже проверен вручную. Рабочий путь использует скрытый editor-only
 `QuickTestInputPoller : MonoBehaviour`, который получает настоящий player-loop
@@ -23,8 +25,8 @@ Play Mode hotkey уже проверен вручную. Рабочий путь
 коротких состояний клавиатуры.
 
 Edit Mode hotkey остаётся ограниченным fallback через `SceneView.duringSceneGui`.
-Поддержка instance methods, weak registry и IL PostProcessor остаются планом
-следующих итераций в порядке, описанном ниже.
+Поддержка plain C# instance methods через weak registry и IL PostProcessor
+остаётся планом следующих итераций в порядке, описанном ниже.
 
 ## Цель
 
@@ -118,7 +120,11 @@ private static void RunStaticTest()
 
 - если метод instance и declaring type наследуется от `UnityEngine.Object`, искать все live instances через Unity API;
 - вызвать метод на всех найденных экземплярах;
-- не создавать объекты вручную.
+- не создавать объекты вручную;
+- `MonoBehaviour` искать через scene object lookup, включая inactive objects;
+- `ScriptableObject` и loaded `EditorWindow` искать через resources lookup;
+- не загружать отсутствующие assets через `AssetDatabase` в default scope;
+- `UnityEditor.Editor` targets пока пропускать до отдельной lifecycle-проверки.
 
 Покрываемые типы:
 
@@ -379,7 +385,7 @@ private static void StaticSmokeTest()
 }
 ```
 
-2. `MonoBehaviour` instance method invocation on all active scene instances.
+2. `MonoBehaviour` instance method invocation on all loaded scene instances.
 
 ```csharp
 public sealed class QuickTestMonoSmoke : MonoBehaviour
@@ -467,7 +473,9 @@ After prototype validation:
 
 ## Current known mismatch in existing prototype
 
-The first prototype is static-only. This is why this method is not registered:
+Unity object instance methods are supported. Plain C# instance methods are still
+not registered until the manual weak registry prototype exists. This method is
+therefore still skipped:
 
 ```csharp
 public class ArtifactModel
@@ -481,18 +489,15 @@ public class ArtifactModel
 
 Reason:
 
-- current discovery scans only static methods;
-- current invocation uses `MethodInfo.Invoke(null, null)`;
-- instance methods require target resolution.
+- reflection cannot enumerate live plain C# heap instances;
+- the package must not depend on project-specific service locators;
+- plain C# targets require the weak registry from the next phase.
 
 Required next correction:
 
-- discovery must include instance methods;
-- invocation must route through target resolution:
-  - static direct;
-  - Unity object lookup;
-  - manual weak registry for plain C# prototype;
-  - later ILPP automatic registration.
+- add manual weak registry for plain C# prototype;
+- keep static direct and Unity object lookup routing unchanged;
+- later add ILPP automatic registration only after the registry model is proven.
 
 ## Confidence assessment
 

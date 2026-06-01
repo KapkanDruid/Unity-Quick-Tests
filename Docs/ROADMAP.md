@@ -9,14 +9,16 @@
 
 - вызов `static void` методов без параметров через `QuickTestHotkeyAttribute`;
 - вызов `static void` методов по расписанию через `QuickTestScheduleAttribute`;
+- вызов instance `void` методов без параметров на live `UnityEngine.Object`
+  targets;
 - интервалы в editor update ticks и секундах;
 - режимы `Once` и `Repeat`;
 - Play Mode hotkey через скрытый editor-only `QuickTestInputPoller`;
 - ограниченный Edit Mode fallback через `SceneView.duringSceneGui`.
 
-Главная следующая цель: поддержать вызовы на существующих instance targets, не
-добавляя зависимость от сервисов конкретной игры и не создавая тестовые объекты
-в обход их настоящего lifecycle.
+Главная следующая цель: поддержать plain C# instance targets через ручной weak
+registry, не добавляя зависимость от сервисов конкретной игры и не создавая
+тестовые объекты в обход их настоящего lifecycle.
 
 ## Принципы разработки
 
@@ -58,17 +60,17 @@
 
 Задачи:
 
-- [ ] Расширить discovery: находить instance `void` методы без параметров.
-- [ ] Разделить invocation routing:
+- [x] Расширить discovery: находить instance `void` методы без параметров.
+- [x] Разделить invocation routing:
   - static method вызывается напрямую;
   - `UnityEngine.Object` target ищется через Unity object lookup;
   - plain C# target пока получает понятный warning или пропускается.
-- [ ] Вызывать метод на всех найденных live instances.
-- [ ] Не загружать автоматически отсутствующие assets в default scope.
-- [ ] Ограничить warning о missing target моментом фактического trigger.
-- [ ] Добавить smoke-тест для нескольких `MonoBehaviour` instances.
-- [ ] Добавить smoke-тест для loaded `ScriptableObject`.
-- [ ] Зафиксировать отдельные правила для editor-only targets:
+- [x] Вызывать метод на всех найденных live instances.
+- [x] Не загружать автоматически отсутствующие assets в default scope.
+- [x] Ограничить warning о missing target моментом фактического trigger.
+- [x] Добавить smoke-тест для нескольких `MonoBehaviour` instances.
+- [x] Добавить smoke-тест для loaded `ScriptableObject`.
+- [x] Зафиксировать отдельные правила для editor-only targets:
   - loaded `EditorWindow` искать через Unity resources lookup;
   - lifecycle `UnityEditor.Editor` считать нестабильным и поддерживать только
     после отдельной проверки;
@@ -192,8 +194,8 @@ registry-модель доказана прототипом.
 
 ## Ближайшая рекомендуемая итерация
 
-Начать с **Этапа 1**, затем перейти к **Этапу 2**. IL PostProcessor не трогать,
-пока ручной weak registry из **Этапа 3** не проверен в реальном игровом проекте.
+Следующая итерация: **Этап 3**. IL PostProcessor не трогать, пока ручной weak
+registry из **Этапа 3** не проверен в реальном игровом проекте.
 
 ## Правило обновления roadmap
 

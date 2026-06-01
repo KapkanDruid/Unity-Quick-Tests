@@ -36,6 +36,30 @@ if (-not (Test-Path -LiteralPath $UnityPath)) {
 
 New-Item -ItemType Directory -Force -Path $artifactsPath | Out-Null
 
+function Clear-UnityGeneratedPlayModeArtifacts {
+    $resolvedProjectPath = Resolve-Path -LiteralPath $projectPath
+    $projectRoot = $resolvedProjectPath.Path
+    $assetsPath = Join-Path $projectRoot "Assets"
+    $tempPath = Join-Path $projectRoot "Temp"
+
+    if (Test-Path -LiteralPath $assetsPath) {
+        Get-ChildItem -LiteralPath $assetsPath -Filter "InitTestScene*.unity*" -Force |
+            ForEach-Object {
+                if ($_.FullName.StartsWith($projectRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    Remove-Item -LiteralPath $_.FullName -Force
+                }
+            }
+    }
+
+    if (Test-Path -LiteralPath $tempPath) {
+        $resolvedTempPath = Resolve-Path -LiteralPath $tempPath
+
+        if ($resolvedTempPath.Path.StartsWith($projectRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+            Remove-Item -LiteralPath $resolvedTempPath.Path -Recurse -Force
+        }
+    }
+}
+
 function Invoke-UnityTests {
     param(
         [ValidateSet("EditMode", "PlayMode")]
@@ -55,6 +79,10 @@ function Invoke-UnityTests {
     )
 
     Remove-Item -LiteralPath $resultsPath -Force -ErrorAction SilentlyContinue
+
+    if ($TestMode -eq "PlayMode") {
+        Clear-UnityGeneratedPlayModeArtifacts
+    }
 
     if ($TestFilter) {
         $arguments += @("-testFilter", $TestFilter)
