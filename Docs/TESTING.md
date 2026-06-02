@@ -71,6 +71,8 @@ Tests/
 - reflection-вызов и логирование исключений;
 - discovery поддерживаемых и неподдерживаемых static-методов;
 - discovery Unity object и plain C# instance methods;
+- explicit policy для inherited methods, generic methods/types, async methods и
+  Task/UniTask-like return types;
 - invocation routing на несколько `MonoBehaviour` instances;
 - invocation routing на loaded `ScriptableObject`;
 - invocation routing на зарегистрированные plain C# instances;

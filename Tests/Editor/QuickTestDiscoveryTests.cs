@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -74,9 +75,44 @@ namespace UnityQuickTests.Editor.Tests
         {
             ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.WithParameter), "methods must be parameterless");
             ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.WithReturnValue), "only void methods are supported");
-            ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.Generic), "generic methods are not supported");
+            ExpectIgnoredWarning(typeof(InvalidFixtures), nameof(InvalidFixtures.Generic), "generic methods and generic target types are not supported");
 
             var registrations = QuickTestDiscovery.FindRegistrations(new[] { typeof(InvalidFixtures) });
+
+            Assert.That(registrations, Is.Empty);
+        }
+
+        [Test]
+        public void FindRegistrations_RejectsGenericTargetTypes()
+        {
+            ExpectIgnoredWarning(
+                typeof(InvalidGenericTypeFixture<>),
+                nameof(InvalidGenericTypeFixture<object>.GenericTypeHotkey),
+                "generic methods and generic target types are not supported"
+            );
+
+            var registrations = QuickTestDiscovery.FindRegistrations(new[] { typeof(InvalidGenericTypeFixture<>) });
+
+            Assert.That(registrations, Is.Empty);
+        }
+
+        [Test]
+        public void FindRegistrations_RejectsAsyncAndTaskLikeMethods()
+        {
+            ExpectIgnoredWarning(typeof(InvalidAsyncFixtures), nameof(InvalidAsyncFixtures.AsyncVoid), "async methods are not supported; use a parameterless void wrapper method");
+            ExpectIgnoredWarning(typeof(InvalidAsyncFixtures), nameof(InvalidAsyncFixtures.AsyncTask), "async methods are not supported; use a parameterless void wrapper method");
+            ExpectIgnoredWarning(typeof(InvalidAsyncFixtures), nameof(InvalidAsyncFixtures.ReturnsTask), "Task, ValueTask and UniTask return types are not supported");
+            ExpectIgnoredWarning(typeof(InvalidAsyncFixtures), nameof(InvalidAsyncFixtures.ReturnsFakeUniTask), "Task, ValueTask and UniTask return types are not supported");
+
+            var registrations = QuickTestDiscovery.FindRegistrations(new[] { typeof(InvalidAsyncFixtures) });
+
+            Assert.That(registrations, Is.Empty);
+        }
+
+        [Test]
+        public void FindRegistrations_DoesNotInheritAttributedMethods()
+        {
+            var registrations = QuickTestDiscovery.FindRegistrations(new[] { typeof(DerivedInheritedFixture) });
 
             Assert.That(registrations, Is.Empty);
         }
@@ -142,6 +178,57 @@ namespace UnityQuickTests.Editor.Tests
             public static void Generic<T>()
             {
             }
+        }
+
+        private sealed class InvalidGenericTypeFixture<T>
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void GenericTypeHotkey()
+            {
+            }
+        }
+
+        private static class InvalidAsyncFixtures
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public static async void AsyncVoid()
+            {
+                await Task.Yield();
+            }
+
+            [QuickTestHotkey(KeyCode.T)]
+            public static async Task AsyncTask()
+            {
+                await Task.Yield();
+            }
+
+            [QuickTestHotkey(KeyCode.T)]
+            public static Task ReturnsTask()
+            {
+                return Task.CompletedTask;
+            }
+
+            [QuickTestHotkey(KeyCode.T)]
+            public static UniTask ReturnsFakeUniTask()
+            {
+                return default(UniTask);
+            }
+        }
+
+        private readonly struct UniTask
+        {
+        }
+
+        private class BaseInheritedFixture
+        {
+            [QuickTestHotkey(KeyCode.T)]
+            public void BaseHotkey()
+            {
+            }
+        }
+
+        private sealed class DerivedInheritedFixture : BaseInheritedFixture
+        {
         }
 
         private sealed class ValidMonoBehaviourFixture : MonoBehaviour

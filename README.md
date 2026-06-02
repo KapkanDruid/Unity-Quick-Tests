@@ -70,6 +70,10 @@ public sealed class PlainServiceSmokeTest
 Ограничения:
 
 - методы должны быть `void` и без параметров;
+- inherited attributed methods не пере-регистрируются на derived types;
+- generic methods и generic target types не поддерживаются;
+- `async void`, `Task`, `ValueTask` и `UniTask`-like return types не
+  поддерживаются; используйте parameterless `void` wrapper;
 - static methods вызываются напрямую;
 - instance methods поддерживаются для живых `UnityEngine.Object` targets;
 - `MonoBehaviour` targets ищутся среди loaded scene instances, включая inactive;
@@ -81,6 +85,7 @@ public sealed class PlainServiceSmokeTest
   serializers, нестандартных factory paths и неподдерживаемых типов;
 - registry хранит weak references, дедуплицирует повторную регистрацию и
   очищается вокруг Play Mode transitions;
+- если найдено несколько matching instances, вызываются все;
 - hotkey в edit mode поддерживает модификаторы `Control`, `Shift`, `Alt`, `Command` плюс одну основную клавишу;
 - hotkey в Play Mode проверяется через скрытый editor-only `MonoBehaviour`, который работает в обычном player-loop `Update`;
 - hotkey в edit mode пока срабатывает из Scene View, потому что редакторские события клавиатуры приходят через GUI event loop;

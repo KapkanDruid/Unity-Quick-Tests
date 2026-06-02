@@ -350,9 +350,12 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 
 Решение:
 
-- на первом этапе не поддерживать generic methods;
-- явно решить, наследуются ли quick-test методы;
-- лучше начать с `Inherited = false` и scan declared methods.
+- generic methods и generic target types не поддерживаются;
+- inherited quick-test methods не пере-регистрируются на derived types;
+- runtime attributes остаются `Inherited = false`;
+- discovery сканирует declared methods (`BindingFlags.DeclaredOnly`);
+- если нужен inherited behavior, пользователь делает explicit wrapper method в
+  конкретном target type.
 
 ### Async methods и return values
 
@@ -363,8 +366,12 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 
 Решение:
 
-- первый этап: только `void` methods без параметров;
-- позже отдельно решить поддержку `Task`/`UniTask`, если это реально нужно.
+- только synchronous `void` methods без параметров;
+- `async void` отклоняется явно, потому что exceptions могут стать
+  fire-and-forget;
+- `Task`, `ValueTask` и `UniTask`-like return types отклоняются явно;
+- поддержка async требует отдельного runner с await/exception handling и не
+  входит в `0.1.x`.
 
 ### Parameterized methods
 
@@ -374,8 +381,35 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 
 Решение:
 
-- первый этап: только methods без параметров;
-- если нужны параметры, пользователь делает wrapper method без параметров.
+- только methods без параметров;
+- если нужны параметры, пользователь делает wrapper method без параметров;
+- API для argument providers не добавляется без подтверждённого сценария.
+
+### Target selection
+
+Проблема:
+
+- выбор одного instance вместо всех найденных targets требует UI/state policy;
+- silent first-match behavior был бы непредсказуемым.
+
+Решение:
+
+- если найдено несколько live instances, вызываются все;
+- выбор одного target не добавляется в `0.1.x`;
+- при необходимости пользователь делает wrapper method на нужном target или
+  использует собственный guard внутри метода.
+
+### New trigger attributes
+
+Проблема:
+
+- каждый новый trigger добавляет правила discovery, diagnostics и lifecycle.
+
+Решение:
+
+- в `0.1.x` остаются `QuickTestHotkeyAttribute` и
+  `QuickTestScheduleAttribute`;
+- новые trigger attributes добавлять только после реального consumer-сценария.
 
 ### Hotkey conflicts with Unity shortcuts
 
@@ -557,9 +591,8 @@ Reason:
 
 Next correction:
 
-- evaluate API extensions only when concrete usage demands them: inherited or
-  generic methods, async return types, parameters, selecting one target, or new
-  trigger attributes;
+- prepare release hardening after the prototype core is stable: changelog,
+  package version decision, Git tag install check and consumer smoke;
 - keep static direct, Unity object lookup, registry routing, ILPP registration,
   diagnostics and manual fallback unchanged.
 
@@ -577,7 +610,9 @@ High confidence:
 - player build output excludes editor runner, hidden poller, CodeGen/Cecil
   assemblies and registry registration call sites;
 - editor diagnostics can explain target scope and common hotkey risks without
-  expanding the public runtime API.
+  expanding the public runtime API;
+- unsupported API extensions are rejected predictably instead of being accepted
+  with unclear runtime behavior.
 
 Medium confidence:
 
@@ -588,6 +623,7 @@ Medium confidence:
 Needs prototype/testing:
 
 - behavior with serializers and nonstandard construction paths;
-- generic/inherited method policy;
+- consumer demand for async runner, argument providers, target selection, or new
+  trigger attributes;
 - a true global editor hotkey mechanism, if Unity exposes a suitable public API
   in a future version.

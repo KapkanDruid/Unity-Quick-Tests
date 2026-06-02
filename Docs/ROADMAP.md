@@ -19,13 +19,16 @@
 - runtime quick-test attributes остаются в player как безвредные metadata;
 - editor diagnostics report показывает trigger, declaring type, target scope,
   support status и warnings;
+- API expansion policy закрепляет, что inherited, generic, async/Task/UniTask,
+  parameterized methods, single-target selection и новые trigger attributes не
+  входят в `0.1.x` без подтверждённого сценария;
 - интервалы в editor update ticks и секундах;
 - режимы `Once` и `Repeat`;
 - Play Mode hotkey через скрытый editor-only `QuickTestInputPoller`;
 - ограниченный Edit Mode fallback через `SceneView.duringSceneGui`.
 
-Главная следующая цель: рассмотреть расширения API только после стабилизации
-ядра.
+Главная следующая цель: подготовить release hardening для следующей package
+версии после стабилизации ядра.
 
 ## Принципы разработки
 
@@ -191,13 +194,13 @@ registry-модель доказана прототипом.
 Эти возможности не входят в ближайший прототип. Их следует добавлять только при
 подтверждённой потребности.
 
-- [ ] Определить правила inherited attributed methods.
-- [ ] Решить поддержку generic methods и generic types.
-- [ ] Решить поддержку `Task`, `UniTask` и обработки async exceptions.
-- [ ] Оценить необходимость параметров; базовый рекомендуемый путь остаётся
+- [x] Определить правила inherited attributed methods.
+- [x] Решить поддержку generic methods и generic types.
+- [x] Решить поддержку `Task`, `UniTask` и обработки async exceptions.
+- [x] Оценить необходимость параметров; базовый рекомендуемый путь остаётся
   wrapper method без параметров.
-- [ ] Решить, нужен ли выбор одного instance вместо вызова всех targets.
-- [ ] Рассмотреть новые отдельные trigger attributes, если появятся реальные
+- [x] Решить, нужен ли выбор одного instance вместо вызова всех targets.
+- [x] Рассмотреть новые отдельные trigger attributes, если появятся реальные
   сценарии.
 
 Подтверждённое packaging-решение:
@@ -228,11 +231,23 @@ registry-модель доказана прототипом.
   поддерживаются только already loaded objects, explicit asset scope остаётся
   отдельной будущей фичей.
 
+Подтверждённое API expansion решение:
+
+- inherited quick-test methods не пере-регистрируются на derived types:
+  attributes имеют `Inherited = false`, discovery сканирует declared methods;
+- generic methods и generic target types отклоняются;
+- `async void`, `Task`, `ValueTask` и `UniTask`-like return types отклоняются,
+  потому что exception handling требует отдельного async runner;
+- параметры не поддерживаются; рекомендуемый путь остаётся wrapper method без
+  параметров;
+- target selection не добавляется: найденные live instances вызываются все;
+- новых trigger attributes не добавляется без реального consumer-сценария.
+
 ## Ближайшая рекомендуемая итерация
 
-Следующая итерация: **Этап 7**. Нужно рассматривать расширения API только при
-подтверждённой потребности: inherited/generic methods, async return types,
-параметры, выбор одного target и новые trigger attributes.
+Следующая итерация: release hardening. Нужно решить, нужна ли версия `0.1.1`,
+обновить changelog/release notes, проверить package install through Git tag и
+провести consumer smoke в игровом проекте.
 
 ## Правило обновления roadmap
 

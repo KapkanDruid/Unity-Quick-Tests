@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UnityQuickTests.Editor
@@ -72,15 +74,27 @@ namespace UnityQuickTests.Editor
         {
             string displayName = $"{method.DeclaringType?.FullName}.{method.Name}";
 
-            if (method.ContainsGenericParameters)
+            if (method.ContainsGenericParameters || method.DeclaringType?.ContainsGenericParameters == true)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: generic methods are not supported.");
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: generic methods and generic target types are not supported.");
                 return false;
             }
 
             if (method.GetParameters().Length > 0)
             {
                 Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: methods must be parameterless.");
+                return false;
+            }
+
+            if (method.GetCustomAttribute<AsyncStateMachineAttribute>(false) != null)
+            {
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: async methods are not supported; use a parameterless void wrapper method.");
+                return false;
+            }
+
+            if (IsTaskLikeReturnType(method.ReturnType))
+            {
+                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: Task, ValueTask and UniTask return types are not supported.");
                 return false;
             }
 
@@ -131,6 +145,23 @@ namespace UnityQuickTests.Editor
             }
 
             return true;
+        }
+
+        private static bool IsTaskLikeReturnType(Type returnType)
+        {
+            if (returnType == null)
+                return false;
+
+            if (typeof(Task).IsAssignableFrom(returnType))
+                return true;
+
+            string fullName = returnType.FullName ?? string.Empty;
+            return fullName == "System.Threading.Tasks.ValueTask" ||
+                fullName.StartsWith("System.Threading.Tasks.ValueTask`", StringComparison.Ordinal) ||
+                fullName == "Cysharp.Threading.Tasks.UniTask" ||
+                fullName.StartsWith("Cysharp.Threading.Tasks.UniTask`", StringComparison.Ordinal) ||
+                returnType.Name == "UniTask" ||
+                returnType.Name.StartsWith("UniTask`", StringComparison.Ordinal);
         }
 
         private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
