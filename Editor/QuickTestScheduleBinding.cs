@@ -13,6 +13,7 @@ namespace UnityQuickTests.Editor
         public bool IsCompleted { get; private set; }
         public string Description { get; }
         public string MethodName => _method.DisplayName;
+        public QuickTestMethod Method => _method;
 
         public QuickTestScheduleBinding(
             QuickTestMethod method,

@@ -50,6 +50,10 @@ namespace UnityQuickTests.Editor.Tests
             }));
 
             Assert.That(registrations.All(registration => !registration.Method.Method.IsStatic), Is.True);
+            Assert.That(
+                registrations.Single(registration => registration.Method.Method.Name == "ScriptableHotkey").Method.SupportStatusDescription,
+                Does.Contain("AssetDatabase asset loading is intentionally disabled")
+            );
         }
 
         [Test]

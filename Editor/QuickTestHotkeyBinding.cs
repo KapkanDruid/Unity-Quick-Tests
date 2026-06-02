@@ -22,6 +22,10 @@ namespace UnityQuickTests.Editor
 
         public string Description { get; }
         public string MethodName => _method.DisplayName;
+        public QuickTestMethod Method => _method;
+        public KeyCode TriggerKey => _triggerKey;
+        public bool HasModifiers => _modifiers != EventModifiers.None;
+        public string InputSignature => $"{(int)_modifiers}:{_triggerKey}";
 
         private QuickTestHotkeyBinding(
             QuickTestMethod method,

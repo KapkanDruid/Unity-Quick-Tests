@@ -83,6 +83,10 @@ Tests/
 - очистку registry при входе и выходе из Play Mode для сценариев без domain
   reload;
 - lookup loaded `EditorWindow` через Unity resources;
+- diagnostic warnings для duplicate/no-modifier hotkeys;
+- registration report с trigger, declaring type, target scope и support status;
+- explicit status, что `ScriptableObject` lookup не загружает assets через
+  `AssetDatabase`;
 - ограниченный warning при missing instance target.
 
 `Tests/Runtime` проверяет, что `QuickTestInputPoller` действительно получает

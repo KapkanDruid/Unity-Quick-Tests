@@ -69,7 +69,9 @@ namespace UnityQuickTests.Editor.Tests
         {
             var resolver = new FakeTargetResolver();
             QuickTestMethod method = CreateInstanceMethod(nameof(InstanceFixture.Increment), resolver);
-            string warning = $"[UnityQuickTests] {method.DisplayName} was triggered but no live registered instance target was found.";
+            string warning =
+                $"[UnityQuickTests] {method.DisplayName} was triggered but no live registered instance target was found. " +
+                "Target scope: weak-registered plain C# instances. This warning is suppressed until a matching target appears.";
 
             LogAssert.Expect(LogType.Warning, warning);
             method.Invoke();

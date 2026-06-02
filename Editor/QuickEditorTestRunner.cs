@@ -13,6 +13,7 @@ namespace UnityQuickTests.Editor
 
         private static readonly List<QuickTestHotkeyBinding> _hotkeyBindings = new List<QuickTestHotkeyBinding>();
         private static readonly List<QuickTestScheduleBinding> _scheduleBindings = new List<QuickTestScheduleBinding>();
+        private static readonly List<string> _diagnosticWarnings = new List<string>();
 
         private static QuickTestInputPoller _inputPoller;
         private static int _editorFrame;
@@ -43,17 +44,11 @@ namespace UnityQuickTests.Editor
         [MenuItem("Tools/Unity Quick Tests/List Registered Tests")]
         public static void ListRegisteredTests()
         {
-            var lines = new List<string>
-            {
-                "[UnityQuickTests] Registered tests:",
-                $"Hotkeys: {_hotkeyBindings.Count}",
-                $"Schedules: {_scheduleBindings.Count}"
-            };
-
-            lines.AddRange(_hotkeyBindings.Select(binding => $"Hotkey {binding.Description} -> {binding.MethodName}"));
-            lines.AddRange(_scheduleBindings.Select(binding => $"Schedule {binding.Description} -> {binding.MethodName}"));
-
-            Debug.Log(string.Join("\n", lines));
+            Debug.Log(QuickTestDiagnostics.BuildRegisteredTestsReport(
+                _hotkeyBindings,
+                _scheduleBindings,
+                _diagnosticWarnings
+            ));
         }
 
         internal static int HotkeyBindingCountForTests => _hotkeyBindings.Count;
@@ -77,6 +72,8 @@ namespace UnityQuickTests.Editor
                 RegisterHotkeys(registration, resolvedInputSource);
                 RegisterSchedules(registration, currentTime);
             }
+
+            RefreshDiagnostics();
         }
 
         internal static void TickEditorUpdateForTests(double currentTime)
@@ -118,12 +115,16 @@ namespace UnityQuickTests.Editor
                 RegisterSchedules(registration, currentTime);
             }
 
+            RefreshDiagnostics();
+
             if (shouldLogSummary)
             {
                 Debug.Log(
                     $"[UnityQuickTests] Registered {_hotkeyBindings.Count} hotkey(s) and " +
                     $"{_scheduleBindings.Count} schedule(s)."
                 );
+
+                LogDiagnosticWarnings();
             }
         }
 
@@ -152,6 +153,20 @@ namespace UnityQuickTests.Editor
                     _editorFrame,
                     currentTime
                 ));
+            }
+        }
+
+        private static void RefreshDiagnostics()
+        {
+            _diagnosticWarnings.Clear();
+            _diagnosticWarnings.AddRange(QuickTestDiagnostics.FindHotkeyWarnings(_hotkeyBindings));
+        }
+
+        private static void LogDiagnosticWarnings()
+        {
+            foreach (string warning in _diagnosticWarnings)
+            {
+                Debug.LogWarning(warning);
             }
         }
 

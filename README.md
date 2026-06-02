@@ -88,6 +88,12 @@ public sealed class PlainServiceSmokeTest
 - runtime attributes остаются в player как metadata, но runner, hidden poller,
   CodeGen и injected registration calls проверяются как editor-only.
 
+Меню `Tools/Unity Quick Tests/List Registered Tests` выводит diagnostic report:
+trigger, declaring type, target scope, support status и warnings по конфликтным
+или одиночным hotkeys. Для стабильной работы в редакторе предпочтительны
+modifier combinations: `Control`, `Shift`, `Alt` или `Command` плюс одна trigger
+key.
+
 Дальнейшие фичи и порядок разработки описаны в
 [`Docs/ROADMAP.md`](Docs/ROADMAP.md). Архитектурные решения и риски собраны в
 [`Docs/DESIGN.md`](Docs/DESIGN.md). Инструкция по автоматическим тестам находится

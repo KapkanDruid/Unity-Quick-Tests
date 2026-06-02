@@ -386,8 +386,28 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 Решение:
 
 - технически разрешить одиночные клавиши;
-- рекомендовать modifier combos для стабильности;
-- позже можно добавить conflict warnings, но не усложнять первый вариант.
+- диагностировать duplicate hotkeys и одиночные trigger keys;
+- для одиночных `Q/W/E/R/T/Y/F` предупреждать о возможном конфликте со Scene View;
+- рекомендовать modifier combos (`Control`, `Shift`, `Alt`, `Command` плюс одна
+  trigger key) для стабильности;
+- Edit Mode hotkeys остаются ограниченным Scene View fallback: в Unity
+  `6000.2.8f1` не найден публичный global editor hotkey API для всех окон.
+
+### Registration diagnostics
+
+Решение:
+
+- `Tools/Unity Quick Tests/List Registered Tests` выводит report с trigger,
+  declaring type, target scope и support status;
+- target scope различает static direct invocation, loaded scene `Component`
+  instances, loaded `ScriptableObject`/`UnityEngine.Object` instances, loaded
+  `EditorWindow` instances и weak-registered plain C# instances;
+- missing-target warning остаётся ограниченным: один warning до появления
+  matching target, затем throttle сбрасывается;
+- `ScriptableObject` assets не загружаются через `AssetDatabase` автоматически,
+  потому что implicit project-wide asset loading слишком широк для базового API;
+- explicit asset scope остаётся отдельной будущей фичей, если появится
+  подтверждённый сценарий.
 
 ### Editor-only leakage into player builds
 
@@ -537,10 +557,11 @@ Reason:
 
 Next correction:
 
-- improve editor UX and diagnostics around conflicting hotkeys, registered test
-  listings, target scope and missing-target warnings;
-- keep static direct, Unity object lookup, registry routing, ILPP registration
-  and manual fallback unchanged.
+- evaluate API extensions only when concrete usage demands them: inherited or
+  generic methods, async return types, parameters, selecting one target, or new
+  trigger attributes;
+- keep static direct, Unity object lookup, registry routing, ILPP registration,
+  diagnostics and manual fallback unchanged.
 
 ## Confidence assessment
 
@@ -554,7 +575,9 @@ High confidence:
 - ILPP can be filtered by assembly references and attributes;
 - Unity 6000.2 recognizes the `Unity.*.CodeGen` packaging pattern;
 - player build output excludes editor runner, hidden poller, CodeGen/Cecil
-  assemblies and registry registration call sites.
+  assemblies and registry registration call sites;
+- editor diagnostics can explain target scope and common hotkey risks without
+  expanding the public runtime API.
 
 Medium confidence:
 
@@ -566,4 +589,5 @@ Needs prototype/testing:
 
 - behavior with serializers and nonstandard construction paths;
 - generic/inherited method policy;
-- hotkey reliability across Unity editor focus contexts.
+- a true global editor hotkey mechanism, if Unity exposes a suitable public API
+  in a future version.

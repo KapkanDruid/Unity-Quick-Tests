@@ -17,13 +17,15 @@
   poller type и registry registration call sites в managed player script
   assemblies;
 - runtime quick-test attributes остаются в player как безвредные metadata;
+- editor diagnostics report показывает trigger, declaring type, target scope,
+  support status и warnings;
 - интервалы в editor update ticks и секундах;
 - режимы `Once` и `Repeat`;
 - Play Mode hotkey через скрытый editor-only `QuickTestInputPoller`;
 - ограниченный Edit Mode fallback через `SceneView.duringSceneGui`.
 
-Главная следующая цель: улучшить editor UX и диагностику после проверки
-безопасности player build.
+Главная следующая цель: рассмотреть расширения API только после стабилизации
+ядра.
 
 ## Принципы разработки
 
@@ -169,14 +171,14 @@ registry-модель доказана прототипом.
 
 Задачи:
 
-- [ ] Добавить предупреждения о конфликтных или неоднозначных hotkeys.
-- [ ] Рекомендовать modifier combinations для стабильной работы в редакторе.
-- [ ] Исследовать отдельный механизм глобальных editor hotkeys для окон вне
+- [x] Добавить предупреждения о конфликтных или неоднозначных hotkeys.
+- [x] Рекомендовать modifier combinations для стабильной работы в редакторе.
+- [x] Исследовать отдельный механизм глобальных editor hotkeys для окон вне
   Scene View.
-- [ ] Улучшить список зарегистрированных тестов: trigger, declaring type,
+- [x] Улучшить список зарегистрированных тестов: trigger, declaring type,
   target scope и статус поддержки.
-- [ ] Добавить ограниченные warnings для missing targets.
-- [ ] Решить, нужен ли explicit asset scope для загрузки ScriptableObject assets
+- [x] Добавить ограниченные warnings для missing targets.
+- [x] Решить, нужен ли explicit asset scope для загрузки ScriptableObject assets
   через `AssetDatabase`.
 
 Критерий готовности:
@@ -214,11 +216,23 @@ registry-модель доказана прототипом.
 - `QuickTestInputPoller`, runner, CodeGen и injected registry call sites не должны
   попадать в player output.
 
+Подтверждённое editor-UX решение:
+
+- hotkey collisions и одиночные клавиши диагностируются при reload и в
+  registration report;
+- для стабильной работы в редакторе рекомендуются modifier combinations:
+  `Control`, `Shift`, `Alt` или `Command` плюс одна trigger key;
+- отдельного публичного global editor hotkey API для окон вне Scene View в
+  Unity `6000.2.8f1` не найдено, поэтому Edit Mode остаётся Scene View fallback;
+- `ScriptableObject` assets не загружаются через `AssetDatabase` автоматически:
+  поддерживаются только already loaded objects, explicit asset scope остаётся
+  отдельной будущей фичей.
+
 ## Ближайшая рекомендуемая итерация
 
-Следующая итерация: **Этап 6**. Нужно улучшить editor UX и диагностику:
-конфликтные hotkeys, список зарегистрированных tests, target scope и ограниченные
-warnings для missing targets.
+Следующая итерация: **Этап 7**. Нужно рассматривать расширения API только при
+подтверждённой потребности: inherited/generic methods, async return types,
+параметры, выбор одного target и новые trigger attributes.
 
 ## Правило обновления roadmap
 
