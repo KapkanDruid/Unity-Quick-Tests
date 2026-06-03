@@ -126,17 +126,27 @@ namespace UnityQuickTests.Codegen.Editor
 
         private static bool InjectRegistrations(ModuleDefinition module, List<DiagnosticMessage> diagnostics)
         {
-            MethodReference registerMethod = CreateRegisterMethodReference(module);
+            TypeDefinition[] candidateTypes = GetAllTypes(module.Types)
+                .Where(HasSupportedInstanceQuickTestMethod)
+                .ToArray();
+
+            if (candidateTypes.Length == 0)
+                return false;
+
+            TypeDefinition[] injectableTypes = candidateTypes
+                .Where(type => CanInject(type, diagnostics))
+                .ToArray();
+
+            if (injectableTypes.Length == 0)
+                return false;
+
+            if (!TryCreateRegisterMethodReference(module, diagnostics, out MethodReference registerMethod))
+                return false;
+
             bool changed = false;
 
-            foreach (TypeDefinition type in GetAllTypes(module.Types))
+            foreach (TypeDefinition type in injectableTypes)
             {
-                if (!HasSupportedInstanceQuickTestMethod(type))
-                    continue;
-
-                if (!CanInject(type, diagnostics))
-                    continue;
-
                 changed |= InjectIntoType(type, registerMethod, diagnostics);
             }
 
@@ -302,11 +312,27 @@ namespace UnityQuickTests.Codegen.Editor
             }
         }
 
-        private static MethodReference CreateRegisterMethodReference(ModuleDefinition module)
+        private static bool TryCreateRegisterMethodReference(
+            ModuleDefinition module,
+            List<DiagnosticMessage> diagnostics,
+            out MethodReference methodReference)
         {
-            AssemblyNameReference runtimeAssembly = module.AssemblyReferences.First(reference =>
+            methodReference = null;
+
+            AssemblyNameReference runtimeAssembly = module.AssemblyReferences.FirstOrDefault(reference =>
                 reference.Name == RuntimeAssemblyName
             );
+
+            if (runtimeAssembly == null)
+            {
+                diagnostics.Add(CreateDiagnostic(
+                    DiagnosticType.Warning,
+                    $"Unity Quick Tests skipped IL registration for {module.Name}: missing {RuntimeAssemblyName} assembly reference."
+                ));
+
+                return false;
+            }
+
             var registryType = new TypeReference(
                 "UnityQuickTests",
                 "QuickTestInstanceRegistry",
@@ -324,7 +350,8 @@ namespace UnityQuickTests.Codegen.Editor
 
             registerMethod.Parameters.Add(new ParameterDefinition(module.TypeSystem.Object));
 
-            return module.ImportReference(registerMethod);
+            methodReference = module.ImportReference(registerMethod);
+            return true;
         }
 
         private static DiagnosticMessage CreateDiagnostic(DiagnosticType diagnosticType, string message)
