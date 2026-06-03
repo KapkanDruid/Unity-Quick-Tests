@@ -1,6 +1,6 @@
 {
   "name": "com.urbandruids.unity-quick-tests",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Unity Quick Tests",
   "description": "Attribute-driven quick test triggers for Unity editor and play mode workflows.",
   "unity": "6000.0",
