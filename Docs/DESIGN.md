@@ -2,7 +2,7 @@
 
 Дата: 2026-05-30
 
-## Состояние версии 0.1.0
+## Состояние версии 1.0.0
 
 Пакет вынесен в отдельный UPM repository и переименован в **Unity Quick Tests**.
 
@@ -15,11 +15,10 @@ editor assembly: UnityQuickTests.Editor
 namespace: UnityQuickTests
 ```
 
-В `0.1.0` поддерживаются `static void` методы без параметров. Текущая ветка
-прототипа также поддерживает instance `void` методы без параметров на живых
-`UnityEngine.Object` targets и на plain C# instances. Обычные C# service-классы
-регистрируются автоматически через editor-only IL PostProcessor, а ручной weak
-registry остаётся fallback.
+В `1.0.0` поддерживаются `static void` методы без параметров, instance `void`
+методы без параметров на живых `UnityEngine.Object` targets и plain C# instances.
+Обычные C# service-классы регистрируются автоматически через editor-only IL
+PostProcessor, а ручной weak registry остаётся fallback.
 
 Play Mode hotkey уже проверен вручную. Рабочий путь использует скрытый
 `QuickTestInputPoller : MonoBehaviour`, который компилируется только под
@@ -371,7 +370,7 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
   fire-and-forget;
 - `Task`, `ValueTask` и `UniTask`-like return types отклоняются явно;
 - поддержка async требует отдельного runner с await/exception handling и не
-  входит в `0.1.x`.
+  входит в текущий стабильный API.
 
 ### Parameterized methods
 
@@ -395,7 +394,7 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 Решение:
 
 - если найдено несколько live instances, вызываются все;
-- выбор одного target не добавляется в `0.1.x`;
+- выбор одного target не добавляется в текущий стабильный API;
 - при необходимости пользователь делает wrapper method на нужном target или
   использует собственный guard внутри метода.
 
@@ -407,7 +406,7 @@ public override bool WillProcess(ICompiledAssembly compiledAssembly)
 
 Решение:
 
-- в `0.1.x` остаются `QuickTestHotkeyAttribute` и
+- в текущем стабильном API остаются `QuickTestHotkeyAttribute` и
   `QuickTestScheduleAttribute`;
 - новые trigger attributes добавлять только после реального consumer-сценария.
 

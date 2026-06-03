@@ -18,7 +18,7 @@ constructors поддерживаемых типов. Пакет не завис
 Добавьте Git dependency в `Packages/manifest.json` Unity-проекта:
 
 ```json
-"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/UnityQuickTests.git#v0.1.0"
+"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/UnityQuickTests.git#v1.0.0"
 ```
 
 ## Использование

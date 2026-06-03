@@ -5,7 +5,7 @@
 
 ## Текущее состояние
 
-Версия `0.1.0` опубликована и поддерживает:
+Версия `1.0.0` опубликована и поддерживает:
 
 - вызов `static void` методов без параметров через `QuickTestHotkeyAttribute`;
 - вызов `static void` методов по расписанию через `QuickTestScheduleAttribute`;
@@ -21,7 +21,7 @@
   support status и warnings;
 - API expansion policy закрепляет, что inherited, generic, async/Task/UniTask,
   parameterized methods, single-target selection и новые trigger attributes не
-  входят в `0.1.x` без подтверждённого сценария;
+  входят в текущий стабильный API без подтверждённого сценария;
 - интервалы в editor update ticks и секундах;
 - режимы `Once` и `Repeat`;
 - Play Mode hotkey через скрытый editor-only `QuickTestInputPoller`;
