@@ -68,7 +68,7 @@ namespace UnityQuickTests.Editor
 
             foreach (object target in targets)
             {
-                if (target == null)
+                if (!IsLiveTarget(target))
                 {
                     hasNullTarget = true;
                     continue;
@@ -93,6 +93,15 @@ namespace UnityQuickTests.Editor
             }
         }
 
+        internal bool HasAvailableTarget()
+        {
+            if (Method.IsStatic)
+                return true;
+
+            IReadOnlyList<object> targets = _targetResolver.FindTargets(Method.DeclaringType) ?? Array.Empty<object>();
+            return targets.Any(IsLiveTarget);
+        }
+
         private void InvokeTarget(object target)
         {
             try
@@ -107,6 +116,17 @@ namespace UnityQuickTests.Editor
             {
                 Debug.LogException(exception);
             }
+        }
+
+        private static bool IsLiveTarget(object target)
+        {
+            if (target == null)
+                return false;
+
+            if (target is UnityEngine.Object unityObject)
+                return unityObject != null;
+
+            return true;
         }
 
         private void LogMissingTargetOnce()

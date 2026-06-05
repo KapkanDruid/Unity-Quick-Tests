@@ -9,6 +9,7 @@ namespace UnityQuickTests.Editor
         private readonly QuickTestScheduleAttribute _attribute;
         private bool _isInitialSchedule = true;
         private bool _isWaitingForInitialSecondsTick;
+        private bool _isWaitingForTarget;
         private int _nextFrame;
         private double _nextTime;
 
@@ -38,6 +39,19 @@ namespace UnityQuickTests.Editor
         {
             if (IsCompleted)
                 return;
+
+            if (!_method.HasAvailableTarget())
+            {
+                _isWaitingForTarget = true;
+                return;
+            }
+
+            if (_isWaitingForTarget)
+            {
+                _isWaitingForTarget = false;
+                ScheduleNext(currentFrame, currentTime);
+                return;
+            }
 
             if (_isWaitingForInitialSecondsTick)
             {
