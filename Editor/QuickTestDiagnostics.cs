@@ -136,6 +136,7 @@ namespace UnityQuickTests.Editor
         {
             builder.AppendLine($"- {triggerKind}: {triggerDescription}");
             builder.AppendLine($"  method: {method.DisplayName}");
+            builder.AppendLine($"  method signature: {method.MethodSignature}");
             builder.AppendLine($"  declaring type: {method.DeclaringTypeName}");
             builder.AppendLine($"  target scope: {method.TargetScopeDescription}");
             builder.AppendLine($"  status: {method.SupportStatusDescription}");

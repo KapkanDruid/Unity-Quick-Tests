@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -10,9 +11,11 @@ namespace UnityQuickTests.Editor
     {
         private readonly IQuickTestTargetResolver _targetResolver;
         private bool _hasLoggedMissingTarget;
+        private bool _hasLoggedNullTarget;
 
         public MethodInfo Method { get; }
         public string DisplayName { get; }
+        public string MethodSignature { get; }
         public string TargetDescription { get; }
         public string DeclaringTypeName { get; }
         public string TargetScopeDescription { get; }
@@ -28,6 +31,7 @@ namespace UnityQuickTests.Editor
             Method = method;
             DeclaringTypeName = method.DeclaringType?.FullName ?? "<unknown>";
             DisplayName = $"{DeclaringTypeName}.{method.Name}";
+            MethodSignature = BuildMethodSignature(method);
             TargetDescription = GetTargetDescription(method);
             TargetScopeDescription = GetTargetScopeDescription(method);
             SupportStatusDescription = GetSupportStatusDescription(method);
@@ -36,6 +40,14 @@ namespace UnityQuickTests.Editor
 
         public void Invoke()
         {
+            if (Method.GetParameters().Length > 0)
+            {
+                QuickTestWarningSettings.LogWarning(
+                    $"[UnityQuickTests] {DisplayName} was triggered but cannot be invoked: methods must be parameterless."
+                );
+                return;
+            }
+
             if (Method.IsStatic)
             {
                 InvokeTarget(null);
@@ -51,10 +63,33 @@ namespace UnityQuickTests.Editor
             }
 
             _hasLoggedMissingTarget = false;
+            bool hasInvokedTarget = false;
+            bool hasNullTarget = false;
 
             foreach (object target in targets)
             {
+                if (target == null)
+                {
+                    hasNullTarget = true;
+                    continue;
+                }
+
+                hasInvokedTarget = true;
                 InvokeTarget(target);
+            }
+
+            if (hasNullTarget)
+            {
+                LogNullTargetOnce();
+            }
+            else
+            {
+                _hasLoggedNullTarget = false;
+            }
+
+            if (!hasInvokedTarget && !hasNullTarget)
+            {
+                LogMissingTargetOnce();
             }
         }
 
@@ -79,11 +114,56 @@ namespace UnityQuickTests.Editor
             if (_hasLoggedMissingTarget)
                 return;
 
-            Debug.LogWarning(
+            QuickTestWarningSettings.LogWarning(
                 $"[UnityQuickTests] {DisplayName} was triggered but no live {TargetDescription} target was found. " +
                 $"Target scope: {TargetScopeDescription}. This warning is suppressed until a matching target appears."
             );
             _hasLoggedMissingTarget = true;
+        }
+
+        private void LogNullTargetOnce()
+        {
+            if (_hasLoggedNullTarget)
+                return;
+
+            QuickTestWarningSettings.LogWarning(
+                $"[UnityQuickTests] {DisplayName} was triggered but a resolved {TargetDescription} target was null. " +
+                $"Target scope: {TargetScopeDescription}. The null target was skipped."
+            );
+            _hasLoggedNullTarget = true;
+        }
+
+        private static string BuildMethodSignature(MethodInfo method)
+        {
+            string parameters = string.Join(", ", method
+                .GetParameters()
+                .Select(parameter => $"{GetFriendlyTypeName(parameter.ParameterType)} {parameter.Name}")
+            );
+
+            return $"{method.DeclaringType?.FullName ?? "<unknown>"}.{method.Name}({parameters})";
+        }
+
+        private static string GetFriendlyTypeName(Type type)
+        {
+            if (type == null)
+                return "<unknown>";
+
+            if (!type.IsGenericType)
+                return type.Name;
+
+            string typeName = type.Name;
+            int backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex >= 0)
+            {
+                typeName = typeName.Substring(0, backtickIndex);
+            }
+
+            string genericArguments = string.Join(", ", type
+                .GetGenericArguments()
+                .Select(GetFriendlyTypeName)
+            );
+
+            return $"{typeName}<{genericArguments}>";
         }
 
         private static string GetTargetDescription(MethodInfo method)

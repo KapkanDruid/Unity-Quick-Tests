@@ -7,6 +7,7 @@ namespace UnityQuickTests.Editor
     {
         private readonly QuickTestMethod _method;
         private readonly QuickTestScheduleAttribute _attribute;
+        private bool _isInitialSchedule = true;
         private int _nextFrame;
         private double _nextTime;
 
@@ -55,7 +56,7 @@ namespace UnityQuickTests.Editor
                     return currentTime >= _nextTime;
 
                 default:
-                    Debug.LogWarning($"[UnityQuickTests] Unsupported schedule unit: {_attribute.Unit}.");
+                    QuickTestWarningSettings.LogWarning($"[UnityQuickTests] Unsupported schedule unit: {_attribute.Unit}.");
                     IsCompleted = true;
                     return false;
             }
@@ -66,11 +67,19 @@ namespace UnityQuickTests.Editor
             switch (_attribute.Unit)
             {
                 case QuickTestScheduleUnit.Frames:
-                    _nextFrame = currentFrame + Math.Max(1, (int)Math.Ceiling(_attribute.Interval));
+                    int frameInterval = Math.Max(1, (int)Math.Ceiling(_attribute.Interval));
+                    if (_isInitialSchedule)
+                    {
+                        frameInterval = Math.Max(2, frameInterval);
+                    }
+
+                    _nextFrame = currentFrame + frameInterval;
+                    _isInitialSchedule = false;
                     return;
 
                 case QuickTestScheduleUnit.Seconds:
                     _nextTime = currentTime + _attribute.Interval;
+                    _isInitialSchedule = false;
                     return;
 
                 default:

@@ -9,6 +9,12 @@ namespace UnityQuickTests.Editor.Tests
 {
     public sealed class QuickTestDiscoveryTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            QuickTestWarningSettings.WarningsEnabled = true;
+        }
+
         [Test]
         public void FindRegistrations_ReturnsSupportedStaticMethods()
         {

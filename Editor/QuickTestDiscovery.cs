@@ -76,31 +76,31 @@ namespace UnityQuickTests.Editor
 
             if (method.ContainsGenericParameters || method.DeclaringType?.ContainsGenericParameters == true)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: generic methods and generic target types are not supported.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: generic methods and generic target types are not supported.");
                 return false;
             }
 
             if (method.GetParameters().Length > 0)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: methods must be parameterless.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: methods must be parameterless.");
                 return false;
             }
 
             if (method.GetCustomAttribute<AsyncStateMachineAttribute>(false) != null)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: async methods are not supported; use a parameterless void wrapper method.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: async methods are not supported; use a parameterless void wrapper method.");
                 return false;
             }
 
             if (IsTaskLikeReturnType(method.ReturnType))
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: Task, ValueTask and UniTask return types are not supported.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: Task, ValueTask and UniTask return types are not supported.");
                 return false;
             }
 
             if (method.ReturnType != typeof(void))
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: only void methods are supported.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: only void methods are supported.");
                 return false;
             }
 
@@ -113,31 +113,31 @@ namespace UnityQuickTests.Editor
 
             if (declaringType == null)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: declaring type could not be resolved.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: declaring type could not be resolved.");
                 return false;
             }
 
             if (method.IsAbstract)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: abstract methods are not supported.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: abstract methods are not supported.");
                 return false;
             }
 
             if (declaringType.IsAbstract)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: abstract target types are not supported.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: abstract target types are not supported.");
                 return false;
             }
 
             if (declaringType.IsValueType)
             {
-                Debug.LogWarning($"[UnityQuickTests] {displayName} is ignored: value type target types are not supported.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {displayName} is ignored: value type target types are not supported.");
                 return false;
             }
 
             if (typeof(UnityEditor.Editor).IsAssignableFrom(declaringType))
             {
-                Debug.LogWarning(
+                QuickTestWarningSettings.LogWarning(
                     $"[UnityQuickTests] {displayName} is ignored: UnityEditor.Editor targets are not supported until their lifecycle is validated."
                 );
 

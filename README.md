@@ -15,10 +15,18 @@ constructors поддерживаемых типов. Пакет не завис
 
 ## Установка
 
-Добавьте Git dependency в `Packages/manifest.json` Unity-проекта:
+Вариант 1: в Unity откройте `Window/Package Manager`, нажмите `+`,
+выберите `Add package from git URL...` и вставьте ссылку:
+
+```text
+https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.0.1
+```
+
+Вариант 2: добавьте Git dependency в `Packages/manifest.json`
+Unity-проекта:
 
 ```json
-"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/UnityQuickTests.git#v1.0.1"
+"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.0.1"
 ```
 
 ## Использование
@@ -94,10 +102,11 @@ public sealed class PlainServiceSmokeTest
   CodeGen и injected registration calls проверяются как editor-only.
 
 Меню `Tools/Unity Quick Tests/List Registered Tests` выводит diagnostic report:
-trigger, declaring type, target scope, support status и warnings по конфликтным
-или одиночным hotkeys. Для стабильной работы в редакторе предпочтительны
-modifier combinations: `Control`, `Shift`, `Alt` или `Command` плюс одна trigger
-key.
+trigger, method signature, declaring type, target scope, support status и warnings
+по конфликтным или одиночным hotkeys. Warning-и можно отключить в
+`Tools/Unity Quick Tests/Warning Settings`. Для стабильной работы в редакторе
+предпочтительны modifier combinations: `Control`, `Shift`, `Alt` или `Command`
+плюс одна trigger key.
 
 Дальнейшие фичи и порядок разработки описаны в
 [`Docs/ROADMAP.md`](Docs/ROADMAP.md). Архитектурные решения и риски собраны в

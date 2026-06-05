@@ -16,6 +16,7 @@ namespace UnityQuickTests.Editor.Tests
         public void SetUp()
         {
             _invocationCount = 0;
+            QuickTestWarningSettings.WarningsEnabled = true;
             QuickTestInstanceRegistry.Clear();
         }
 
@@ -96,6 +97,38 @@ namespace UnityQuickTests.Editor.Tests
             CreateStaticMethod(nameof(ThrowExpectedFailure)).Invoke();
         }
 
+        [Test]
+        public void Invoke_ParameterizedMethod_LogsWarningInsteadOfThrowing()
+        {
+            QuickTestMethod method = CreateStaticMethod(nameof(IncrementWithParameter));
+
+            LogAssert.Expect(
+                LogType.Warning,
+                $"[UnityQuickTests] {method.DisplayName} was triggered but cannot be invoked: methods must be parameterless."
+            );
+
+            method.Invoke();
+
+            Assert.That(_invocationCount, Is.Zero);
+        }
+
+        [Test]
+        public void Invoke_NullResolvedTarget_LogsWarningAndSkipsTarget()
+        {
+            var resolver = new FakeTargetResolver(new InstanceFixture(), null);
+            QuickTestMethod method = CreateInstanceMethod(nameof(InstanceFixture.Increment), resolver);
+
+            LogAssert.Expect(
+                LogType.Warning,
+                $"[UnityQuickTests] {method.DisplayName} was triggered but a resolved registered instance target was null. " +
+                "Target scope: weak-registered plain C# instances. The null target was skipped."
+            );
+
+            method.Invoke();
+
+            Assert.That(_invocationCount, Is.EqualTo(1));
+        }
+
         private static QuickTestMethod CreateStaticMethod(string name)
         {
             MethodInfo method = typeof(QuickTestMethodTests)
@@ -123,6 +156,11 @@ namespace UnityQuickTests.Editor.Tests
         private static void Increment()
         {
             _invocationCount++;
+        }
+
+        private static void IncrementWithParameter(int value)
+        {
+            _invocationCount += value;
         }
 
         private static void ThrowExpectedFailure()

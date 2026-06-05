@@ -8,6 +8,12 @@ namespace UnityQuickTests.Editor.Tests
 {
     public sealed class QuickTestHotkeyBindingTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            QuickTestWarningSettings.WarningsEnabled = true;
+        }
+
         private sealed class FakeInputSource : IQuickTestInputSource
         {
             private readonly HashSet<KeyCode> _pressedKeys = new HashSet<KeyCode>();

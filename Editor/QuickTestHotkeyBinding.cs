@@ -64,7 +64,7 @@ namespace UnityQuickTests.Editor
 
             if (keys.Length == 0)
             {
-                Debug.LogWarning($"[UnityQuickTests] {method.DisplayName} hotkey is ignored: no keys were provided.");
+                QuickTestWarningSettings.LogWarning($"[UnityQuickTests] {method.DisplayName} hotkey is ignored: no keys were provided.");
                 return false;
             }
 
@@ -84,7 +84,7 @@ namespace UnityQuickTests.Editor
 
             if (triggerKeys.Count != 1)
             {
-                Debug.LogWarning(
+                QuickTestWarningSettings.LogWarning(
                     $"[UnityQuickTests] {method.DisplayName} hotkey is ignored: use modifiers plus one trigger key."
                 );
 

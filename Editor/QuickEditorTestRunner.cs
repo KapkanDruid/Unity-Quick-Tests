@@ -166,7 +166,7 @@ namespace UnityQuickTests.Editor
         {
             foreach (string warning in _diagnosticWarnings)
             {
-                Debug.LogWarning(warning);
+                QuickTestWarningSettings.LogWarning(warning);
             }
         }
 

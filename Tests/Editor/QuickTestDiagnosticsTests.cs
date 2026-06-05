@@ -63,6 +63,8 @@ namespace UnityQuickTests.Editor.Tests
 
             Assert.That(report, Does.Contain("Hotkey: Ctrl+T"));
             Assert.That(report, Does.Contain("Schedule: Once after 3 frame(s)"));
+            Assert.That(report, Does.Contain($"method signature: {typeof(QuickTestDiagnosticsTests).FullName}.First()"));
+            Assert.That(report, Does.Contain($"method signature: {typeof(PlainFixture).FullName}.Run()"));
             Assert.That(report, Does.Contain($"declaring type: {typeof(QuickTestDiagnosticsTests).FullName}"));
             Assert.That(report, Does.Contain("target scope: static method"));
             Assert.That(report, Does.Contain("status: supported: direct invocation"));

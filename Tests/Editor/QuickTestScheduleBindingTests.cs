@@ -14,6 +14,24 @@ namespace UnityQuickTests.Editor.Tests
         }
 
         [Test]
+        public void Tick_OnceAfterOneFrame_DoesNotInvokeOnFirstObservedTick()
+        {
+            var binding = CreateBinding(
+                new QuickTestScheduleAttribute(1, QuickTestScheduleUnit.Frames),
+                currentFrame: 0,
+                currentTime: 0d
+            );
+
+            binding.Tick(1, 0d);
+            Assert.That(_invocationCount, Is.Zero);
+
+            binding.Tick(2, 0d);
+
+            Assert.That(_invocationCount, Is.EqualTo(1));
+            Assert.That(binding.IsCompleted, Is.True);
+        }
+
+        [Test]
         public void Tick_OnceAfterFrames_InvokesOnlyOnce()
         {
             var binding = CreateBinding(
@@ -26,6 +44,9 @@ namespace UnityQuickTests.Editor.Tests
             Assert.That(_invocationCount, Is.Zero);
 
             binding.Tick(12, 5d);
+            Assert.That(_invocationCount, Is.EqualTo(1));
+            Assert.That(binding.IsCompleted, Is.True);
+
             binding.Tick(13, 5d);
 
             Assert.That(_invocationCount, Is.EqualTo(1));
