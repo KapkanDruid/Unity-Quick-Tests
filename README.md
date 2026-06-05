@@ -19,14 +19,14 @@ constructors поддерживаемых типов. Пакет не завис
 выберите `Add package from git URL...` и вставьте ссылку:
 
 ```text
-https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.0.1
+https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.1.1
 ```
 
 Вариант 2: добавьте Git dependency в `Packages/manifest.json`
 Unity-проекта:
 
 ```json
-"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.0.1"
+"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.1.1"
 ```
 
 ## Использование

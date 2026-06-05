@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 1.1.1
+
+- Added `Tools/Unity Quick Tests/Warning Settings` to toggle Unity Quick Tests warnings.
+- Added guarded warnings for parameterized methods and null resolved targets.
+- Added method signatures to the registered tests report.
+- Filtered package test assemblies from runtime discovery so package fixtures do not appear in consumer registered-test lists.
+- Fixed `QuickTestSchedule` startup timing so scheduled methods wait for the configured interval instead of firing immediately after reload.
+- Deferred instance schedules until a live target exists; the interval starts when the target appears and missing-target warnings are suppressed while waiting.
+- Updated installation examples for the renamed GitHub repository.
+
 ## 1.0.0
 
 - Changed the package license to MIT.
