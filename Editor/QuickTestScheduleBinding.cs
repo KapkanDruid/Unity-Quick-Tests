@@ -8,6 +8,7 @@ namespace UnityQuickTests.Editor
         private readonly QuickTestMethod _method;
         private readonly QuickTestScheduleAttribute _attribute;
         private bool _isInitialSchedule = true;
+        private bool _isWaitingForInitialSecondsTick;
         private int _nextFrame;
         private double _nextTime;
 
@@ -25,13 +26,26 @@ namespace UnityQuickTests.Editor
             _method = method;
             _attribute = attribute;
             Description = BuildDescription(attribute);
+            _isWaitingForInitialSecondsTick = attribute.Unit == QuickTestScheduleUnit.Seconds;
 
-            ScheduleNext(currentFrame, currentTime);
+            if (!_isWaitingForInitialSecondsTick)
+            {
+                ScheduleNext(currentFrame, currentTime);
+            }
         }
 
         public void Tick(int currentFrame, double currentTime)
         {
-            if (IsCompleted || !IsDue(currentFrame, currentTime))
+            if (IsCompleted)
+                return;
+
+            if (_isWaitingForInitialSecondsTick)
+            {
+                ScheduleNext(currentFrame, currentTime);
+                return;
+            }
+
+            if (!IsDue(currentFrame, currentTime))
                 return;
 
             _method.Invoke();
@@ -80,6 +94,7 @@ namespace UnityQuickTests.Editor
                 case QuickTestScheduleUnit.Seconds:
                     _nextTime = currentTime + _attribute.Interval;
                     _isInitialSchedule = false;
+                    _isWaitingForInitialSecondsTick = false;
                     return;
 
                 default:

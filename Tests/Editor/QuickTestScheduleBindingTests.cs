@@ -54,6 +54,27 @@ namespace UnityQuickTests.Editor.Tests
         }
 
         [Test]
+        public void Tick_OnceAfterSeconds_DoesNotInvokeOnFirstObservedTick()
+        {
+            var binding = CreateBinding(
+                new QuickTestScheduleAttribute(5, QuickTestScheduleUnit.Seconds),
+                currentFrame: 0,
+                currentTime: 0d
+            );
+
+            binding.Tick(1, 100d);
+            Assert.That(_invocationCount, Is.Zero);
+
+            binding.Tick(1, 104.99d);
+            Assert.That(_invocationCount, Is.Zero);
+
+            binding.Tick(1, 105d);
+
+            Assert.That(_invocationCount, Is.EqualTo(1));
+            Assert.That(binding.IsCompleted, Is.True);
+        }
+
+        [Test]
         public void Tick_RepeatingSeconds_ReschedulesFromCurrentTime()
         {
             var binding = CreateBinding(
@@ -63,9 +84,17 @@ namespace UnityQuickTests.Editor.Tests
             );
 
             binding.Tick(0, 3.49d);
+            Assert.That(_invocationCount, Is.Zero);
+
             binding.Tick(0, 3.5d);
-            binding.Tick(0, 4.9d);
-            binding.Tick(0, 5d);
+            Assert.That(_invocationCount, Is.Zero);
+
+            binding.Tick(0, 4.98d);
+            Assert.That(_invocationCount, Is.Zero);
+
+            binding.Tick(0, 4.99d);
+            binding.Tick(0, 6.48d);
+            binding.Tick(0, 6.49d);
 
             Assert.That(_invocationCount, Is.EqualTo(2));
             Assert.That(binding.IsCompleted, Is.False);

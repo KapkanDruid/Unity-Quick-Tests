@@ -103,9 +103,17 @@ namespace UnityQuickTests.Editor.Tests
             );
 
             QuickEditorTestRunner.TickEditorUpdateForTests(10.24d);
+            Assert.That(_invocationCount, Is.Zero);
+
             QuickEditorTestRunner.TickEditorUpdateForTests(10.25d);
+            Assert.That(_invocationCount, Is.Zero);
+
+            QuickEditorTestRunner.TickEditorUpdateForTests(10.48d);
+            Assert.That(_invocationCount, Is.Zero);
+
             QuickEditorTestRunner.TickEditorUpdateForTests(10.49d);
-            QuickEditorTestRunner.TickEditorUpdateForTests(10.5d);
+            QuickEditorTestRunner.TickEditorUpdateForTests(10.73d);
+            QuickEditorTestRunner.TickEditorUpdateForTests(10.74d);
 
             Assert.That(_invocationCount, Is.EqualTo(2));
             Assert.That(QuickEditorTestRunner.ScheduleBindingCountForTests, Is.EqualTo(1));

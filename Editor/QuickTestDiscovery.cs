@@ -21,9 +21,28 @@ namespace UnityQuickTests.Editor
         {
             IEnumerable<Type> types = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => !assembly.IsDynamic)
+                .Where(ShouldSearchAssemblyForRegistrations)
                 .SelectMany(GetLoadableTypes);
 
             return FindRegistrations(types);
+        }
+
+        internal static bool ShouldSearchAssemblyForRegistrations(Assembly assembly)
+        {
+            if (assembly == null)
+                return false;
+
+            string assemblyName = assembly.GetName().Name ?? string.Empty;
+
+            if (assemblyName.EndsWith(".Tests", StringComparison.Ordinal) ||
+                assemblyName == "QuickTestCodegen.Consumer")
+            {
+                return false;
+            }
+
+            return !assembly
+                .GetReferencedAssemblies()
+                .Any(IsTestFrameworkAssembly);
         }
 
         internal static IReadOnlyList<QuickTestRegistration> FindRegistrations(IEnumerable<Type> types)
@@ -179,6 +198,14 @@ namespace UnityQuickTests.Editor
                 Debug.LogException(exception);
                 return Array.Empty<Type>();
             }
+        }
+
+        private static bool IsTestFrameworkAssembly(AssemblyName assemblyName)
+        {
+            string name = assemblyName.Name ?? string.Empty;
+            return name == "nunit.framework" ||
+                name == "UnityEngine.TestRunner" ||
+                name == "UnityEditor.TestRunner";
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using QuickTestCodegen.Consumer;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -74,6 +75,14 @@ namespace UnityQuickTests.Editor.Tests
             Assert.That(registration.Method.TargetDescription, Is.EqualTo("registered instance"));
             Assert.That(registration.HotkeyAttributes.Count, Is.EqualTo(1));
             Assert.That(registration.ScheduleAttributes, Is.Empty);
+        }
+
+        [Test]
+        public void ShouldSearchAssemblyForRegistrations_SkipsPackageTestAssemblies()
+        {
+            Assert.That(QuickTestDiscovery.ShouldSearchAssemblyForRegistrations(typeof(QuickTestDiscoveryTests).Assembly), Is.False);
+            Assert.That(QuickTestDiscovery.ShouldSearchAssemblyForRegistrations(typeof(AutoRegisteredPlainTarget).Assembly), Is.False);
+            Assert.That(QuickTestDiscovery.ShouldSearchAssemblyForRegistrations(typeof(QuickTestHotkeyAttribute).Assembly), Is.True);
         }
 
         [Test]
