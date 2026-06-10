@@ -20,8 +20,9 @@
 .DS_Store
 Thumbs.db
 
-# Local project knowledge system. Keep generated structure and curated agent
-# memory on the developer machine; only human-facing docs are versioned.
+# Local project knowledge system. Keep generated structure, curated agent
+# memory, and completed planning/design notes on the developer machine.
+# Only README.md and Docs/TESTING.md are versioned as user-facing docs.
 graphify-out/
 graphify-out.meta
 AgentMemory/
@@ -29,6 +30,10 @@ AgentMemory.meta
 .graphify_*
 .graphifyignore
 .obsidian/
+Docs/DESIGN.md
+Docs/DESIGN.md.meta
+Docs/ROADMAP.md
+Docs/ROADMAP.md.meta
 
 # Local agent instructions. Keep repository-specific guidance on the developer
 # machine instead of publishing it as part of the Unity package.

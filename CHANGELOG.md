@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.1.2
+
+- Reworked the README around the practical problem Unity Quick Tests solves.
+- Simplified user-facing limitations and diagnostics documentation.
+- Moved completed roadmap and design notes out of versioned documentation while keeping testing docs versioned.
+
 ## 1.1.1
 
 - Added `Tools/Unity Quick Tests/Warning Settings` to toggle Unity Quick Tests warnings.

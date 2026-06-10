@@ -1,32 +1,31 @@
----
-title: Unity Quick Tests
-system: Tools
-tags: [editor, tests, tooling]
----
-
 # Unity Quick Tests
 
-Модуль добавляет быстрые editor-only вызовы методов через атрибуты. Он
-поддерживает static methods, instance methods на уже существующих
-`UnityEngine.Object` targets и plain C# instances. Для обычных C# service-классов
-editor-only IL PostProcessor автоматически добавляет weak registration в
-constructors поддерживаемых типов. Пакет не зависит от игрового кода и рассчитан
-на подключение как отдельный Unity package.
+Иногда нужно просто быстро дёрнуть метод: проверить расчёт, прогнать кусок
+сервиса, пересобрать кеш, вызвать редакторскую утилиту или посмотреть, что
+логика вообще работает. Но в Unity для этого часто приходится делать лишнюю
+обвязку: временный `MonoBehaviour`, кнопку в инспекторе, пункт меню, отдельный
+редакторский сервис, консольную команду или полноценный тест.
+
+`Unity Quick Tests` убирает эту обвязку. Вы ставите атрибут на метод без
+параметров, назначаете сочетание клавиш или расписание, а пакет сам найдёт
+подходящие живые цели и вызовет метод в корректном жизненном цикле
+Unity/редактора. Для обычных C#-классов регистрация сделана через слабые
+ссылки, поэтому пакет не удерживает объекты в памяти и не создаёт лишних
+проблем с очисткой.
 
 ## Установка
 
-Вариант 1: в Unity откройте `Window/Package Manager`, нажмите `+`,
-выберите `Add package from git URL...` и вставьте ссылку:
+Вариант 1: в Unity откройте `Window/Package Manager`, нажмите `+`, выберите
+`Add package from git URL...` и вставьте ссылку:
 
 ```text
-https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.1.1
+https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.1.2
 ```
 
-Вариант 2: добавьте Git dependency в `Packages/manifest.json`
-Unity-проекта:
+Вариант 2: добавьте Git dependency в `Packages/manifest.json` Unity-проекта:
 
 ```json
-"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.1.1"
+"com.urbandruids.unity-quick-tests": "https://github.com/KapkanDruid/Unity-Quick-Tests.git#v1.1.2"
 ```
 
 ## Использование
@@ -75,40 +74,57 @@ public sealed class PlainServiceSmokeTest
 }
 ```
 
-Ограничения:
+## Что поддерживается
 
-- методы должны быть `void` и без параметров;
-- inherited attributed methods не пере-регистрируются на derived types;
-- generic methods и generic target types не поддерживаются;
-- `async void`, `Task`, `ValueTask` и `UniTask`-like return types не
-  поддерживаются; используйте parameterless `void` wrapper;
-- static methods вызываются напрямую;
-- instance methods поддерживаются для живых `UnityEngine.Object` targets;
-- `MonoBehaviour` targets ищутся среди loaded scene instances, включая inactive;
-- `ScriptableObject` и `EditorWindow` targets ищутся только среди уже loaded
-  objects, без автоматической загрузки assets через `AssetDatabase`;
-- поддерживаемые plain C# instance targets автоматически регистрируются через
-  editor-only IL PostProcessor при выполнении constructor;
-- ручной `QuickTestInstanceRegistry.Register(this)` остаётся fallback для
-  serializers, нестандартных factory paths и неподдерживаемых типов;
-- registry хранит weak references, дедуплицирует повторную регистрацию и
-  очищается вокруг Play Mode transitions;
-- если найдено несколько matching instances, вызываются все;
-- hotkey в edit mode поддерживает модификаторы `Control`, `Shift`, `Alt`, `Command` плюс одну основную клавишу;
-- hotkey в Play Mode проверяется через скрытый editor-only `MonoBehaviour`, который работает в обычном player-loop `Update`;
-- hotkey в edit mode пока срабатывает из Scene View, потому что редакторские события клавиатуры приходят через GUI event loop;
-- schedule работает через `EditorApplication.update`, поэтому кадры означают editor update ticks;
-- runtime attributes остаются в player как metadata, но runner, hidden poller,
-  CodeGen и injected registration calls проверяются как editor-only.
+- `static` методы вызываются напрямую.
+- Методы на `MonoBehaviour`, `ScriptableObject` и `EditorWindow` вызываются на
+  уже загруженных экземплярах.
+- Методы на обычных C#-классах, которые не наследуются от `UnityEngine.Object`,
+  вызываются через регистрацию экземпляра.
+- Вызов можно повесить на сочетание клавиш или на расписание в тиках обновления
+  редактора / секундах.
+- Для расписания доступны режимы `Once` и `Repeat`.
 
-Меню `Tools/Unity Quick Tests/List Registered Tests` выводит diagnostic report:
-trigger, method signature, declaring type, target scope, support status и warnings
-по конфликтным или одиночным hotkeys. Warning-и можно отключить в
-`Tools/Unity Quick Tests/Warning Settings`. Для стабильной работы в редакторе
-предпочтительны modifier combinations: `Control`, `Shift`, `Alt` или `Command`
-плюс одна trigger key.
+## Ограничения
 
-Дальнейшие фичи и порядок разработки описаны в
-[`Docs/ROADMAP.md`](Docs/ROADMAP.md). Архитектурные решения и риски собраны в
-[`Docs/DESIGN.md`](Docs/DESIGN.md). Инструкция по автоматическим тестам находится
-в [`Docs/TESTING.md`](Docs/TESTING.md).
+- Метод, помеченный атрибутом пакета, должен быть `void` и без параметров.
+- `async void`, `Task`, `ValueTask`, `UniTask` и методы с возвращаемым значением
+  не поддерживаются. Для таких случаев сделайте обычную `void`-обёртку.
+- Обобщённые методы и обобщённые типы не поддерживаются.
+- Если метод с quick-test атрибутом объявлен в базовом классе, пакет не создаёт
+  отдельные проверки для каждого наследника. Если нужен вызов именно на
+  наследнике, добавьте в нём отдельный метод-обёртку.
+- Пакет не создаёт объекты сам. Нестатические методы вызываются только на уже
+  существующих экземплярах.
+- Если ни одного подходящего экземпляра нет, метод не будет вызван.
+- Если найдено несколько подходящих экземпляров, метод вызывается на каждом.
+- `MonoBehaviour` ищется среди загруженных объектов сцены, включая неактивные.
+- `ScriptableObject` и `EditorWindow` поддерживаются только если объект уже
+  загружен. Пакет не сканирует проект через `AssetDatabase`.
+- Обычные C#-классы, которые не наследуются от `UnityEngine.Object`,
+  поддерживаются через регистрацию экземпляра. Обычно пакет добавляет её сам в
+  конструктор через IL PostProcessor. Если объект создаётся нестандартным
+  способом и не зарегистрировался автоматически, можно вызвать
+  `QuickTestInstanceRegistry.Register(this)` вручную.
+- Регистрация обычных C#-экземпляров хранит слабые ссылки (`WeakReference`),
+  поэтому quick-test не удерживает эти объекты в памяти и не мешает сборщику
+  мусора очищать их, когда они больше не нужны.
+- Сочетания клавиш в Edit Mode работают через события `Scene View`, поэтому это
+  не полноценная глобальная система горячих клавиш для всех окон редактора.
+- В player build попадают только атрибуты как обычные метаданные. Код, который
+  ищет и запускает quick-tests, работает только в редакторе.
+
+## Диагностика
+
+Меню `Tools/Unity Quick Tests/List Registered Tests` выводит список найденных
+проверок: способ запуска, сигнатуру метода, тип, в котором метод объявлен,
+область поиска цели, статус поддержки и предупреждения по конфликтующим
+сочетаниям клавиш.
+
+Предупреждения можно настроить через
+`Tools/Unity Quick Tests/Warning Settings`.
+
+## Тестирование
+
+Инструкция по автоматическим проверкам находится в
+[`Docs/TESTING.md`](Docs/TESTING.md).
